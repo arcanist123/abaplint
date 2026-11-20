@@ -23,6 +23,12 @@ git -C ../abaplint-agenda pull                                           # after
   - review the inheritance tests the transpiler already has
   - list the gaps and add tests for them
   - syntax-check and run every new test on the real system before it goes into a PR
+  - 2026-11-20: 16 SAP-checked tests in `test/code_structure/inheritance.ts`, branch `inheritance-tests` (local, not pushed)
+  - gaps found, no issues raised yet (drafts in transpiler `instructions/inheritance-gaps.md`):
+    1. indirect and dynamic calls from a super class constructor reach the redefinition (SAP `AB`, transpiler `BB`)
+    2. CASE TYPE OF: `WHEN TYPE x.` without INTO crashes, `WHEN TYPE <interface>` never matches
+    3. class constructors run at load, SAP runs them on first use (only the declaring class for inherited statics)
+    4. `CALL METHOD ('LCL_X')=>('M')` does not find local classes
 
 ## Fork branches to clean up or finish
 

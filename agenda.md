@@ -35,7 +35,7 @@ git -C ../abaplint-agenda pull                                           # after
     1. indirect and dynamic calls from a super class constructor reach the redefinition: #2100, fix in PR #2101 by christianguenter2
     2. CASE TYPE OF: `WHEN TYPE x.` without INTO crashes, `WHEN TYPE <interface>` never matches: #2156, PR #2163
     3. class constructors run at load, SAP on first use: #1849, SAP timing measured and a proposal posted
-       (larshp is reluctant, overhead); prototype + measurements on branch `lazy-class-constructor`
+       (larshp is reluctant, overhead); prototype + measurements on branch `lazy-class-constructor`, results posted on #1849 2026-11-20, waiting for larshp on a PR
        (design in transpiler `instructions/class-constructor-1849.md`), to share with oisee
     4. `CALL METHOD ('LCL_X')=>('M')` does not find local classes: #2157, PR #2162
   - each fix PR brings its own test

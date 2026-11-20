@@ -38,6 +38,7 @@ git -C ../abaplint-agenda pull                                           # after
 - #2173 tests for operations on p (tests only), opened 2026-11-20
 - #2184 tests for operations on decfloat16 and decfloat34 (tests only), opened 2026-11-20
 - #2191 tests for operations on f (tests only), opened 2026-11-20
+- #2194 tests for operations on i (tests only), opened 2026-11-20
 
 ## Next
 
@@ -94,6 +95,10 @@ git -C ../abaplint-agenda pull                                           # after
   - #2189 f to i / int8 beyond the range: no CX_SY_CONVERSION_OVERFLOW
   - #2190 sqrt/log/log10/acos outside the domain give NaN instead of CX_SY_ARG_OUT_OF_DOMAIN
   - comment added: #2175 (to n, f too)
+- [ ] transpiler: i reviewed 2026-11-20, passing operations in PR #2194; raised:
+  - #2192 no CX_SY_ARITHMETIC_OVERFLOW for i (+, -, *, ADD, abs, COLLECT); the skipped integer.ts "overflow" test expects the wrong class
+  - #2193 i to a short c keeps the leading digits, SAP the right end with *
+  - comments added: #2189 (int8, p, text, ** into i: no CX_SY_CONVERSION_OVERFLOW), #2175 (to n, i too)
 
 ## Fork branches to clean up or finish
 

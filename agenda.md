@@ -18,7 +18,6 @@ git -C ../abaplint-agenda pull                                           # after
 ## Next
 
 - [ ] transpiler#2139: AS TEXT in SORT, FOR GROUPS, LOOP AT ... GROUP BY
-- [ ] transpiler#2022 / #2138: LOOP AT ... GROUP BY, unblocked by the abaplint type fixes
 - [ ] transpiler: make sure inheritance behaves as on a real ABAP system
   - review the inheritance tests the transpiler already has
   - list the gaps and add tests for them
@@ -40,6 +39,7 @@ git -C ../abaplint-agenda pull                                           # after
 
 ## Done
 
+- [x] transpiler#2138 LOOP AT ... GROUP BY and LOOP AT GROUP (closes #2022), merged 2026-11-19
 - [x] #4551 LOOP AT ... GROUP BY typing (closes #4482)
 - [x] #4600 GROUP BY DESCENDING and AS TEXT (closes #4599)
 - [x] #4545 predicate functions outside logical expressions, numeric functions in WRITE and MESSAGE

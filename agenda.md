@@ -34,6 +34,7 @@ git -C ../abaplint-agenda pull                                           # after
 - #2151 VALUE integer literal above 2^53 (#2150): rebased onto main (3dba93c4), conflict in
   `test/types/integer8.ts` resolved (kept both tests), CI green, waiting for review
 - #2168 hex to int8, last eight bytes, two's complement (#1673): opened 2026-11-20
+- #2169 int8 arithmetic overflow (#2042): opened 2026-11-20
 
 ## Next
 
@@ -54,10 +55,10 @@ git -C ../abaplint-agenda pull                                           # after
   - #1963 (oisee) int8 to and from byte fields (x, xstring) disagree with ABAP 7.58; measured on 7.58 in the issue
   - #1673 (larshp) int8 from hex can exceed the int8 range, should keep the last 8 bytes; same area as #1963: PR #2168
   - #2042 (larshp) int8 arithmetic does not raise `CX_SY_ARITHMETIC_OVERFLOW`, results leave -2^63 .. 2^63-1:
-    fixed on branch `int8-overflow` (e1d440cd, local, worktree `../transpiler-int8`), PR after #2168.
+    PR #2169 (branch `int8-overflow`, e1d440cd).
     p, f, decfloat34 targets compute as decfloat34 (no int8 overflow there, as on SAP); this also fixes
     int8 / int8 into p or f (3.5, was 3). Known gap to mention in the PR: unary minus or abs( ) of the
-    int8 minimum into a p target still raises
+    int8 minimum into a p target still raises (stated in the PR)
   - re-check each behaviour on the real system before a PR
 - [ ] transpiler: issues found while fixing #2042, raised 2026-11-20
   - #2165 `**` with int8 operands is exact, SAP calculates in f (CX_SY_CONVERSION_OVERFLOW into int8)

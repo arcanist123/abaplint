@@ -35,6 +35,7 @@ git -C ../abaplint-agenda pull                                           # after
   `test/types/integer8.ts` resolved (kept both tests), CI green, waiting for review
 - #2168 hex to int8, last eight bytes, two's complement (#1673): opened 2026-11-20
 - #2169 int8 arithmetic overflow (#2042): opened 2026-11-20
+- #2173 tests for operations on p (tests only), opened 2026-11-20
 
 ## Next
 
@@ -70,6 +71,10 @@ git -C ../abaplint-agenda pull                                           # after
   - #2170 unary minus applies to the whole expression, `- a + b` is `- ( a + b )` (all types)
   - #2171 MOD with p operands rounds the remainder, 7.5 MOD 2 gives 2
   - #2172 p target too small for an arithmetic result: CX_SY_CONVERSION_OVERFLOW, SAP CX_SY_ARITHMETIC_OVERFLOW
+  - passing operations covered by tests in PR #2173
+  - not raised yet, found by the probe: p to c (SAP `     1.50-`, here `-1.5`), p to n (12.5 gives 12, SAP 13;
+    -12.4 gives `000-12`, SAP `000012`), templates SIGN = LEFTPLUS for a positive, SIGN = RIGHT for a
+    negative, WIDTH/ALIGN, STYLE = SCIENTIFIC
 
 ## Fork branches to clean up or finish
 

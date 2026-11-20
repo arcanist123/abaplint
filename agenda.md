@@ -28,10 +28,12 @@ git -C ../abaplint-agenda pull                                           # after
 
 - #2163 CASE TYPE OF (#2156): changes requested by larshp, CI timed out twice (c9ede517, 4b480613),
   stalled at ~97% of `npm test`; not reproducible locally, passed after merging main (b69fb1a7).
-  Comment asking for a re-review posted; main merged in again, CI rerunning
-- #2162 CALL METHOD (name)=>(meth) local classes (#2157): up to date with main, waiting for review
+  Comment asking for a re-review posted; main merged in again, CI green, waiting for larshp
+- #2162 CALL METHOD (name)=>(meth) local classes (#2157): Web check hung the same way once (flaky),
+  green after an empty "Rerun CI" commit (no admin rights for a rerun), waiting for review
 - #2151 VALUE integer literal above 2^53 (#2150): rebased onto main (3dba93c4), conflict in
-  `test/types/integer8.ts` resolved (kept both tests), waiting for review
+  `test/types/integer8.ts` resolved (kept both tests), CI green, waiting for review
+- #2168 hex to int8, last eight bytes, two's complement (#1673): opened 2026-11-20
 
 ## Next
 
@@ -50,9 +52,17 @@ git -C ../abaplint-agenda pull                                           # after
   - each fix PR brings its own test
 - [ ] transpiler: open int8 issues raised by others (no comments yet, nobody on them as of 2026-11-20)
   - #1963 (oisee) int8 to and from byte fields (x, xstring) disagree with ABAP 7.58; measured on 7.58 in the issue
-  - #1673 (larshp) int8 from hex can exceed the int8 range, should keep the last 8 bytes; same area as #1963
-  - #2042 (larshp) int8 arithmetic does not raise `CX_SY_ARITHMETIC_OVERFLOW`, results leave -2^63 .. 2^63-1
+  - #1673 (larshp) int8 from hex can exceed the int8 range, should keep the last 8 bytes; same area as #1963: PR #2168
+  - #2042 (larshp) int8 arithmetic does not raise `CX_SY_ARITHMETIC_OVERFLOW`, results leave -2^63 .. 2^63-1:
+    fixed on branch `int8-overflow` (e1d440cd, local, worktree `../transpiler-int8`), PR after #2168.
+    p, f, decfloat34 targets compute as decfloat34 (no int8 overflow there, as on SAP); this also fixes
+    int8 / int8 into p or f (3.5, was 3). Known gap to mention in the PR: unary minus or abs( ) of the
+    int8 minimum into a p target still raises
   - re-check each behaviour on the real system before a PR
+- [ ] transpiler: issues found while fixing #2042, raised 2026-11-20
+  - #2165 `**` with int8 operands is exact, SAP calculates in f (CX_SY_CONVERSION_OVERFLOW into int8)
+  - #2166 comparing p with int8 goes through a double: digits lost above 2^53, RangeError for p with decimals
+  - #2167 arithmetic with p operands loses digits above 2^53
 
 ## Fork branches to clean up or finish
 

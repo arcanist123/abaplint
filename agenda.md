@@ -19,6 +19,10 @@ git -C ../abaplint-agenda pull                                           # after
 
 - [ ] transpiler#2139: AS TEXT in SORT, FOR GROUPS, LOOP AT ... GROUP BY
 - [ ] transpiler#2022 / #2138: LOOP AT ... GROUP BY, unblocked by the abaplint type fixes
+- [ ] transpiler: make sure inheritance behaves as on a real ABAP system
+  - review the inheritance tests the transpiler already has
+  - list the gaps and add tests for them
+  - syntax-check and run every new test on the real system before it goes into a PR
 
 ## Fork branches to clean up or finish
 

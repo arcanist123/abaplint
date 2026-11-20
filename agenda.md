@@ -72,9 +72,9 @@ git -C ../abaplint-agenda pull                                           # after
   - #2171 MOD with p operands rounds the remainder, 7.5 MOD 2 gives 2
   - #2172 p target too small for an arithmetic result: CX_SY_CONVERSION_OVERFLOW, SAP CX_SY_ARITHMETIC_OVERFLOW
   - passing operations covered by tests in PR #2173
-  - not raised yet, found by the probe: p to c (SAP `     1.50-`, here `-1.5`), p to n (12.5 gives 12, SAP 13;
-    -12.4 gives `000-12`, SAP `000012`), templates SIGN = LEFTPLUS for a positive, SIGN = RIGHT for a
-    negative, WIDTH/ALIGN, STYLE = SCIENTIFIC
+  - #2174 p to c: number text instead of right-aligned, decimals, sign last; overflow not cut left with `*`
+  - #2175 p to n truncates and keeps the minus sign
+  - #2176 string templates ignore SIGN = LEFTPLUS/RIGHTPLUS/RIGHT, ALIGN with WIDTH, STYLE = SCIENTIFIC (p and i)
 
 ## Fork branches to clean up or finish
 

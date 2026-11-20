@@ -64,6 +64,12 @@ git -C ../abaplint-agenda pull                                           # after
   - #2165 `**` with int8 operands is exact, SAP calculates in f (CX_SY_CONVERSION_OVERFLOW into int8)
   - #2166 comparing p with int8 goes through a double: digits lost above 2^53, RangeError for p with decimals
   - #2167 arithmetic with p operands loses digits above 2^53
+- [ ] transpiler: p test coverage reviewed 2026-11-20: no tests for MOD, DIV, **, relational compares,
+  ADD/SUBTRACT/... statements, COLLECT/SORT/READ by a p field, SELECT/INSERT with p columns, template
+  SIGN/NUMBER/STYLE, EXACT, zero divide; a probe against SAP found (raised 2026-11-20):
+  - #2170 unary minus applies to the whole expression, `- a + b` is `- ( a + b )` (all types)
+  - #2171 MOD with p operands rounds the remainder, 7.5 MOD 2 gives 2
+  - #2172 p target too small for an arithmetic result: CX_SY_CONVERSION_OVERFLOW, SAP CX_SY_ARITHMETIC_OVERFLOW
 
 ## Fork branches to clean up or finish
 

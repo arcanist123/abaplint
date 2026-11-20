@@ -18,6 +18,8 @@ git -C ../abaplint-agenda pull                                           # after
 ## Next
 
 - [ ] transpiler#2139: AS TEXT in SORT, FOR GROUPS, LOOP AT ... GROUP BY
+  - SORT and FOR GROUPS: PR #2159 (branch `as-text`), also fixes SORT ignoring DESCENDING before BY
+  - LOOP AT ... GROUP BY ... AS TEXT: waits for an abaplint release with #4600, then a follow-up PR
 - [ ] transpiler: make sure inheritance behaves as on a real ABAP system
   - review the inheritance tests the transpiler already has
   - list the gaps and add tests for them

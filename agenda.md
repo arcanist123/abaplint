@@ -37,6 +37,7 @@ git -C ../abaplint-agenda pull                                           # after
 - #2169 int8 arithmetic overflow (#2042): opened 2026-11-20
 - #2173 tests for operations on p (tests only), opened 2026-11-20
 - #2184 tests for operations on decfloat16 and decfloat34 (tests only), opened 2026-11-20
+- #2191 tests for operations on f (tests only), opened 2026-11-20
 
 ## Next
 
@@ -85,7 +86,14 @@ git -C ../abaplint-agenda pull                                           # after
   - #2182 templates ignore SCIENTIFIC, ENGINEERING, SIGN_AS_POSTFIX, SCALE_PRESERVING, EXPONENT for decfloat
   - #2183 COLLECT sums decfloat34 as a double
   - comments added: #2171 (MOD, decfloat too), #2175 (to n, decfloat too), #963 (decfloat16 not rounded to 16 digits)
-  - not raised: f in string templates, 0.25 gives 0.2500000000000000, SAP 0.25 (f, not decfloat)
+- [ ] transpiler: f reviewed 2026-11-20, passing operations in PR #2191; raised:
+  - #2185 f in string templates: 16 fixed decimals instead of the shortest text; ENGINEERING, EXPONENT ignored
+  - #2186 f to c: decimal comma, not right-aligned
+  - #2187 f to p rounds a negative half up (Math.round)
+  - #2188 f overflow gives Infinity instead of CX_SY_ARITHMETIC_OVERFLOW
+  - #2189 f to i / int8 beyond the range: no CX_SY_CONVERSION_OVERFLOW
+  - #2190 sqrt/log/log10/acos outside the domain give NaN instead of CX_SY_ARG_OUT_OF_DOMAIN
+  - comment added: #2175 (to n, f too)
 
 ## Fork branches to clean up or finish
 

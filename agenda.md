@@ -36,6 +36,7 @@ git -C ../abaplint-agenda pull                                           # after
 - #2168 hex to int8, last eight bytes, two's complement (#1673): opened 2026-11-20
 - #2169 int8 arithmetic overflow (#2042): opened 2026-11-20
 - #2173 tests for operations on p (tests only), opened 2026-11-20
+- #2184 tests for operations on decfloat16 and decfloat34 (tests only), opened 2026-11-20
 
 ## Next
 
@@ -75,6 +76,16 @@ git -C ../abaplint-agenda pull                                           # after
   - #2174 p to c: number text instead of right-aligned, decimals, sign last; overflow not cut left with `*`
   - #2175 p to n truncates and keeps the minus sign
   - #2176 string templates ignore SIGN = LEFTPLUS/RIGHTPLUS/RIGHT, ALIGN with WIDTH, STYLE = SCIENTIFIC (p and i)
+- [ ] transpiler: decfloat16/34 reviewed 2026-11-20, passing operations in PR #2184; raised:
+  - #2177 ** with a fractional exponent and sqrt( ) as a double; sqrt( 6.25 ) gives the root of 6
+  - #2178 integer literals into a decfloat34 target as a double (1 / 3)
+  - #2179 decfloat34 to c and string: decimal comma, alignment, scale
+  - #2180 f to decfloat34: SAP takes 17 digits (0.1 -> 0.10000000000000001)
+  - #2181 no CX_SY_ARITHMETIC_OVERFLOW beyond the exponent range
+  - #2182 templates ignore SCIENTIFIC, ENGINEERING, SIGN_AS_POSTFIX, SCALE_PRESERVING, EXPONENT for decfloat
+  - #2183 COLLECT sums decfloat34 as a double
+  - comments added: #2171 (MOD, decfloat too), #2175 (to n, decfloat too), #963 (decfloat16 not rounded to 16 digits)
+  - not raised: f in string templates, 0.25 gives 0.2500000000000000, SAP 0.25 (f, not decfloat)
 
 ## Fork branches to clean up or finish
 

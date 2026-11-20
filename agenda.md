@@ -39,6 +39,7 @@ git -C ../abaplint-agenda pull                                           # after
 - #2184 tests for operations on decfloat16 and decfloat34 (tests only), opened 2026-11-20
 - #2191 tests for operations on f (tests only), opened 2026-11-20
 - #2194 tests for operations on i (tests only), opened 2026-11-20
+- #2198 tests for operations on int8 (tests only), opened 2026-11-20
 
 ## Next
 
@@ -99,6 +100,11 @@ git -C ../abaplint-agenda pull                                           # after
   - #2192 no CX_SY_ARITHMETIC_OVERFLOW for i (+, -, *, ADD, abs, COLLECT); the skipped integer.ts "overflow" test expects the wrong class
   - #2193 i to a short c keeps the leading digits, SAP the right end with *
   - comments added: #2189 (int8, p, text, ** into i: no CX_SY_CONVERSION_OVERFLOW), #2175 (to n, i too)
+- [ ] transpiler: int8 swept 2026-11-20 (earlier only bug fixes), passing operations in PR #2198; raised:
+  - #2195 ipow( ) with an int8 base as a double (SAP exact; ** is f, #2165)
+  - #2196 text with decimals to int8: JavaScript SyntaxError, SAP rounds ('2.5' -> 3)
+  - #2197 template DECIMALS ignored for int8
+  - comments added: #2166 (int8 vs string), #2189 (text beyond int8), #2193 (to a short c), #2176 (SIGN/ALIGN/SCIENTIFIC)
 
 ## Fork branches to clean up or finish
 

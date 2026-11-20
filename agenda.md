@@ -1,6 +1,15 @@
 # Agenda
 
 Changes I want to get into abaplint/abaplint `main`, shared across laptops.
+
+## Purpose
+
+Support the open-steamgate development of Alice Vinogradova (oisee): make the abaplint parser and the transpiler behave
+as close to a real SAP system as possible, while keeping the output compilable to Go.
+
+- SAP behaviour is the reference, not abaplint's rules: when they differ, follow the system
+- every behaviour is measured on a real system (A4H 7.58) before it goes into a test or a PR
+- no change that would stop the generated code from compiling to Go
 This branch (`agenda`) has no code, only this file. Pull before editing, push after.
 
 ```
@@ -17,19 +26,18 @@ git -C ../abaplint-agenda pull                                           # after
 
 ## Next
 
-- [ ] transpiler#2139: AS TEXT in SORT, FOR GROUPS, LOOP AT ... GROUP BY
-  - SORT and FOR GROUPS: PR #2159 (branch `as-text`), also fixes SORT ignoring DESCENDING before BY
-  - LOOP AT ... GROUP BY ... AS TEXT: waits for an abaplint release with #4600, then a follow-up PR
 - [ ] transpiler: make sure inheritance behaves as on a real ABAP system
   - review the inheritance tests the transpiler already has
   - list the gaps and add tests for them
   - syntax-check and run every new test on the real system before it goes into a PR
-  - 2026-11-20: 16 SAP-checked tests in `test/code_structure/inheritance.ts`, PR #2158 (branch `inheritance-tests`)
+  - 2026-11-20: 16 SAP-checked tests in `test/code_structure/inheritance.ts`, PR #2158, merged
   - gaps raised 2026-11-20 (details in transpiler `instructions/inheritance-gaps.md`):
-    1. indirect and dynamic calls from a super class constructor reach the redefinition: #2100 (existing, commented)
-    2. CASE TYPE OF: `WHEN TYPE x.` without INTO crashes, `WHEN TYPE <interface>` never matches: #2156
-    3. class constructors run at load, SAP on first use: #1849 (existing, commented with SAP results)
-    4. `CALL METHOD ('LCL_X')=>('M')` does not find local classes: #2157
+    1. indirect and dynamic calls from a super class constructor reach the redefinition: #2100, fix in PR #2101 by christianguenter2
+    2. CASE TYPE OF: `WHEN TYPE x.` without INTO crashes, `WHEN TYPE <interface>` never matches: #2156, PR #2163
+    3. class constructors run at load, SAP on first use: #1849, SAP timing measured and a proposal posted
+       (larshp is reluctant, overhead); prototype + measurements on branch `lazy-class-constructor`
+       (design in transpiler `instructions/class-constructor-1849.md`), to share with oisee
+    4. `CALL METHOD ('LCL_X')=>('M')` does not find local classes: #2157, PR #2162
   - each fix PR brings its own test
 
 ## Fork branches to clean up or finish
@@ -40,6 +48,8 @@ git -C ../abaplint-agenda pull                                           # after
 - `hvam/align2310`, `hvam/memory2110`
 
 ## Done
+
+- [x] transpiler#2139 AS TEXT: SORT and FOR GROUPS (#2159), LOOP AT ... GROUP BY (#2161, issue #2160), merged 2026-11-20
 
 - [x] transpiler#2138 LOOP AT ... GROUP BY and LOOP AT GROUP (closes #2022), merged 2026-11-19
 - [x] #4551 LOOP AT ... GROUP BY typing (closes #4482)

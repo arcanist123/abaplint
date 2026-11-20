@@ -26,7 +26,6 @@ git -C ../abaplint-agenda pull                                           # after
 - `like-decimals`
 - `new-object-data-ref-inferred-type`
 - `hvam/align2310`, `hvam/memory2110`
-- merged upstream, can be deleted: `loop-group-by-types` (#4551), `loop-group-by-descending` (#4600), `syntax-predicate-numeric-functions` (#4545)
 
 ## Done
 

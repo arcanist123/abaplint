@@ -40,6 +40,7 @@ git -C ../abaplint-agenda pull                                           # after
 - #2191 tests for operations on f (tests only), opened 2026-11-20
 - #2194 tests for operations on i (tests only), opened 2026-11-20
 - #2198 tests for operations on int8 (tests only), opened 2026-11-20
+- #2200 tests for operations on INT1 and INT2 (tests only), opened 2026-11-20
 
 ## Next
 
@@ -105,6 +106,8 @@ git -C ../abaplint-agenda pull                                           # after
   - #2196 text with decimals to int8: JavaScript SyntaxError, SAP rounds ('2.5' -> 3)
   - #2197 template DECIMALS ignored for int8
   - comments added: #2166 (int8 vs string), #2189 (text beyond int8), #2193 (to a short c), #2176 (SIGN/ALIGN/SCIENTIFIC)
+- [ ] transpiler: b and s (DDIC INT1/INT2, only reachable via DDIC) swept 2026-11-20, in-range operations in PR #2200; raised:
+  - #2199 b and s run as i (abaplint ddic.ts maps INT1/INT2 to IntegerType): no range check, DESCRIBE FIELD gives I 4
 
 ## Fork branches to clean up or finish
 

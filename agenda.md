@@ -48,6 +48,11 @@ git -C ../abaplint-agenda pull                                           # after
        (design in transpiler `instructions/class-constructor-1849.md`), to share with oisee
     4. `CALL METHOD ('LCL_X')=>('M')` does not find local classes: #2157, PR #2162
   - each fix PR brings its own test
+- [ ] transpiler: open int8 issues raised by others (no comments yet, nobody on them as of 2026-11-20)
+  - #1963 (oisee) int8 to and from byte fields (x, xstring) disagree with ABAP 7.58; measured on 7.58 in the issue
+  - #1673 (larshp) int8 from hex can exceed the int8 range, should keep the last 8 bytes; same area as #1963
+  - #2042 (larshp) int8 arithmetic does not raise `CX_SY_ARITHMETIC_OVERFLOW`, results leave -2^63 .. 2^63-1
+  - re-check each behaviour on the real system before a PR
 
 ## Fork branches to clean up or finish
 

@@ -189,8 +189,7 @@ Priority 3, unclear or outside 7.58:
 
 ## Fork branches
 
-Cleaned up 2026-11-21: all merged branches deleted on the fork and locally. Left: `main`, `agenda`,
-`types-alias-qualified-name` (abaplint#4612).
+Cleaned up 2026-11-21: all merged branches deleted on the fork and locally. Left: `main`, `agenda`.
 
 ## Done
 

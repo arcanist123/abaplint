@@ -133,7 +133,7 @@ Not reviewed yet: c, string, x, xstring, d, t, utclong.
     - abaplint#1545 v750: `FILTER #( tab IN ftab WHERE ... )`: no error; check on SAP which release allows `IN`
     - abaplint#3041 `APPEND INITIAL LINE TO sorted_tab`: no error (hashed gives one); check on SAP whether
       sorted is a syntax error or only a runtime one (ITAB_ILLEGAL_SORT_ORDER), close if runtime
-  - **already fixed, comment and ask to close**:
+  - **already fixed**, commented 2026-11-21 asking to close, waiting for larshp:
     - abaplint#363 `APPEND ... TO tab[ ... ]-files`: "table expression not allowed in target"
     - abaplint#609 `DATA foo TYPE STANDARD TABLE.` / `... TABLE OF.`: generic / parser error
     - abaplint#1548 `integers = 2.` into a table: "Incompatible types"

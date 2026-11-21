@@ -40,6 +40,7 @@ git -C ../abaplint-agenda pull                                           # after
   `space` from the comments not covered), branch `me-reserved-name`
 - [ ] **abaplint#4628** FOR TESTING method in a class which is not a test class (#2612; void super class not
   reported), branch `for-testing-in-non-test-class`
+- [ ] **abaplint#4629** ALIASES name already used by a method, attribute or type (#2685), branch `alias-name-conflicts`
 - #4625, #4627, #4628 add tests at the same place in `test/abap/syntax/syntax.ts`: expect a conflict after the first merge
 
 ### transpiler: open PRs
@@ -137,15 +138,16 @@ Not reviewed yet: c, string, x, xstring, d, t, utclong.
 ### abaplint: class issues, rest
 
 Reviewed 2026-11-21 (each snippet through check_syntax on main). Open with a PR: #3560 (#4625), #3212 (#4626),
-#2096 (#4627), #2612 (#4628). Already fixed on main, asked the authors to close (comments 2026-11-21): #3715, #2274,
+#2096 (#4627), #2612 (#4628), #2685 (#4629). Already fixed on main, asked the authors to close (comments 2026-11-21): #3715, #2274,
 #2099, #1727, #1712 (hover part not checked), #1695, #1539, #3161, #3596.
 
-- [x] #4393 / #2212 non-final global class with only a PUBLIC SECTION: **false positive**. Measured on A4H
-  2026-11-21: syntax check gives a warning (W, "... must exist in global classes"), not an error, and the class
+- [x] #4393 / #2212 non-final global class with only a PUBLIC SECTION: **false positive** on our A4H (2025,
+  SAP_ABA 816, newer than the reporter's 7.58): syntax check gives a warning (W, "... must exist in global classes"), not an error, and the class
   activates (activation log W, `forceSupported: true`). Nothing for check_syntax; thread updated. Leftover test
-  class `ZCL_ABAPLINT_4393_A` in `$TMP` on A4H, to delete
+  class `ZCL_ABAPLINT_4393_A` in `$TMP` on A4H, to delete. Scratch program `ZABAPLINT_CLASS_CHECK` in `$TMP`
+  for syntax checks of local classes (send content via SyntaxCheck, no save needed)
 - [ ] #3593 `METHODS setup FOR TESTING`: larshp says only a warning, leave
-- [ ] still reproduce, no PR yet: #2685 alias overlapping a method name; #2556 type used before its definition in
+- [ ] still reproduce, no PR yet: #2556 type used before its definition in
   the class definition; #2097 write to a READ-ONLY attribute from outside (also interface attributes); #1738
   DEFAULT and OPTIONAL together; #1561 implement_methods false positive, alias + REDEFINITION; #2033
   prefix_is_current_class `me->attribute` (option request)

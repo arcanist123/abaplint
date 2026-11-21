@@ -23,9 +23,8 @@ git -C ../abaplint-agenda pull                                           # after
 
 ### abaplint
 
-- [ ] **abaplint#4612** TYPES TYPE <integer, string or table type> creates a new type (closes abaplint#4609),
-  branch `types-alias-qualified-name`. larshp asked to check conflicts (2026-11-21 10:36); main merged in
-  (0b412643, 11:03), mergeable, CI green, waiting for re-review
+No open abaplint PRs (2026-11-21).
+
 - [ ] **abaplint#4610** DDIC name missing for data elements with a non-character domain (INT4, STRING_UNICODE)
   and for table types (STRING_TABLE); measured on 7.58 in the issue, no PR yet
   - checked 2026-11-21 (scratchpad probe with Z objects): wider than the issue says. DDIC name set only for
@@ -37,8 +36,7 @@ git -C ../abaplint-agenda pull                                           # after
   - cause 2: `objects/table_type.ts` `parseType` never sets a DDIC name, `TableType` constructor has no parameter for it
   - plan, one PR, two commits: (1) pass `extra` to all types in `textToType`, widen the three constructors to
     `string | AbstractTypeData` (keeps the public API); (2) `TableType` takes a ddicName, TTYP passes its name.
-    Tests in `test/abap/syntax/basic_variables.ts` next to the existing getDDICName tests (~line 1354-1491),
-    away from #4612's additions in the same file. No file overlap with #4612 otherwise, can go in parallel
+    Tests in `test/abap/syntax/basic_variables.ts` next to the existing getDDICName tests (~line 1354-1491)
   - transpiler follow-up: `transpile_types.ts` emits ddicName only for Character and Structure, so RTTI
     `is_ddic_type( )` for i, string, n, x, tables needs a transpiler PR too (runtime types carry `extra`)
 
@@ -161,8 +159,7 @@ Not reviewed yet: c, string, x, xstring, d, t, utclong.
 Rules for these PRs (larshp reviews each one):
 - one issue per PR (or two that touch the same lines), ~10-30 lines of code plus tests in `test/rules/check_syntax.ts`
 - a new error fires only for the exact case of the issue, nothing broader
-- tests next to related tests, not at the end of the file (conflicts, see abaplint#4612); no two open PRs on the
-  same source file; at most 2-3 open at once
+- only if several of these PRs are open at the same time: keep them on different source files
 
 Priority 1, small and safe, independent files (can run two in parallel):
 - [ ] PR 1: #3218 + #3924 table keys, in `5_syntax/expressions/type_table.ts`: error for an explicit `NON-UNIQUE`
@@ -199,6 +196,7 @@ Cleaned up 2026-11-21: all merged branches deleted on the fork and locally. Left
 
 ### abaplint
 
+- [x] abaplint#4612 TYPES TYPE <integer, string or table type> creates a new type (closes #4609), merged 2026-11-21
 - [x] abaplint#4614 length in brackets, `DATA foo(8) TYPE d` (closes #4613), merged 2026-11-21
 - [x] abaplint#4611 TYPES TYPE <DDIC structure> creates a new type (closes #4608), merged 2026-11-21
 - [x] abaplint#4602 LENGTH only for c/n/x/p, DECIMALS only for p (closes #1988), merged 2026-11-19

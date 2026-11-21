@@ -22,13 +22,11 @@ git -C ../abaplint-agenda pull                                           # after
 
 ## Working rules
 
-- this branch is public: the same wording rules as for PRs and issues apply here, in this file and in the
-  commit messages. ABAP behaviour is described as expected, no release names, no output of any tool
 - larshp reviews and merges; I have triage only. Do not merge main into an open PR or press "Update branch"
   unless GitHub shows a conflict or larshp asks: out of date is fine, neither repo requires up-to-date branches,
   and an update restarts CI and races with his merges
 - close only my own issues; for other people's fixed issues, comment with the evidence (PR, test) and let them close
-- small PRs: one issue per PR (or two that touch the same lines), a new error only for the exact case of the issue
+
 
 ## In progress (status 2026-11-21 night)
 

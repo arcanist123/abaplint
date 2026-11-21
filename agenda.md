@@ -27,7 +27,20 @@ git -C ../abaplint-agenda pull                                           # after
   branch `types-alias-qualified-name`. larshp asked to check conflicts (2026-11-21 10:36); main merged in
   (0b412643, 11:03), mergeable, CI green, waiting for re-review
 - [ ] **abaplint#4610** DDIC name missing for data elements with a non-character domain (INT4, STRING_UNICODE)
-  and for table types (STRING_TABLE); measured on 7.58 in the issue, no PR yet. Same area as #4612, start after it is merged
+  and for table types (STRING_TABLE); measured on 7.58 in the issue, no PR yet
+  - checked 2026-11-21 (scratchpad probe with Z objects): wider than the issue says. DDIC name set only for
+    CHAR-like and packed types and structures; missing for INT1/2/4, INT8, NUMC, RAW, DATS, TIMS, FLTP, decfloat,
+    STRING, XSTRING (domain-based and predefined-type data elements alike) and for every TTYP
+  - cause 1: `DDIC.textToType` (`ddic.ts`) builds `extra` (qualifiedName, conversionExit, ddicName, description)
+    but passes only `{qualifiedName}` to these types; `NumericType`, `HexType`, `FloatingPointType` constructors
+    take only a qualifiedName string. Conversion exit and description are lost the same way (NUMC with ALPHA)
+  - cause 2: `objects/table_type.ts` `parseType` never sets a DDIC name, `TableType` constructor has no parameter for it
+  - plan, one PR, two commits: (1) pass `extra` to all types in `textToType`, widen the three constructors to
+    `string | AbstractTypeData` (keeps the public API); (2) `TableType` takes a ddicName, TTYP passes its name.
+    Tests in `test/abap/syntax/basic_variables.ts` next to the existing getDDICName tests (~line 1354-1491),
+    away from #4612's additions in the same file. No file overlap with #4612 otherwise, can go in parallel
+  - transpiler follow-up: `transpile_types.ts` emits ddicName only for Character and Structure, so RTTI
+    `is_ddic_type( )` for i, string, n, x, tables needs a transpiler PR too (runtime types carry `extra`)
 
 ### transpiler: open PRs, waiting for review by larshp
 

@@ -114,14 +114,39 @@ Found in the type-by-type review (2026-11-20). Passing operations are covered by
 
 Not reviewed yet: c, string, x, xstring, d, t, utclong.
 
-## Fork branches to delete (merged, squash)
+### abaplint: internal table issues to check
 
-- `for-let-local-names` (abaplint#4562), `like-decimals` (abaplint#4603), `type-length-decimals` (abaplint#4602/#4603)
-- `new-object-data-ref-inferred-type` (abaplint#4484)
-- `loop-group-by-types` (abaplint#4551), `loop-group-by-descending` (abaplint#4600)
-- `syntax-predicate-numeric-functions` (abaplint#4545), `types-ddic-qualified-name` (abaplint#4611)
-- `old-style-length` (abaplint#4614)
-- `hvam/align2310` (abaplint#4483), `hvam/memory2110` (only an upstream commit)
+- [ ] open issues on parsing / syntax checking internal tables, reviewed 2026-11-21
+  - reviewed: the snippet of each issue run through check_syntax + parser_error on main (after abaplint#4614).
+    Next step for each: run it on the real system, then fix with a test, or comment and ask to close
+  - **still wrong in abaplint** (no error, or an error on valid code):
+    - abaplint#2529 `IF !line_exists( ... )`, `!lines( )`, `!to_upper( )`: parser error, SAP accepts the `!`
+    - abaplint#3218 `HASHED TABLE ... WITH NON-UNIQUE KEY`: no error, SAP: a hashed key must be unique
+    - abaplint#3924 `SORTED TABLE ... WITH UNIQUE EMPTY KEY`: no error (expected on SAP: an empty key must be non-unique)
+    - abaplint#1790 `DELETE itab.`, `MODIFY itab.`, `INSERT itab.` (short forms) on a table without a header line: no error
+    - abaplint#2455 `INSERT str INTO TABLE int_tab` (string into a table of i): no error, SAP: incompatible
+      (the SPLIT ... INTO TABLE half of the issue is fixed)
+    - abaplint#3209 a table WITH HEADER LINE passed to a table-typed method parameter: no error
+    - abaplint#3231 `DATA lr LIKE REF TO val` with `val TYPE data`: no error (the `TYPE STANDARD TABLE` half
+      of the issue now gives "cannot be generic", check the message SAP gives)
+    - abaplint#1459 v702: `READ TABLE ... WITH KEY f = lcl=>m( )`, method call as a key value: no error
+    - abaplint#1545 v750: `FILTER #( tab IN ftab WHERE ... )`: no error; check on SAP which release allows `IN`
+    - abaplint#3041 `APPEND INITIAL LINE TO sorted_tab`: no error (hashed gives one); check on SAP whether
+      sorted is a syntax error or only a runtime one (ITAB_ILLEGAL_SORT_ORDER), close if runtime
+  - **already fixed, comment and ask to close**:
+    - abaplint#363 `APPEND ... TO tab[ ... ]-files`: "table expression not allowed in target"
+    - abaplint#609 `DATA foo TYPE STANDARD TABLE.` / `... TABLE OF.`: generic / parser error
+    - abaplint#1548 `integers = 2.` into a table: "Incompatible types"
+    - abaplint#1744 `FOR GROUPS _grp OF ...` inside VALUE: `_grp` found now
+    - abaplint#3431 table with DEFAULT KEY into a parameter typed WITH EMPTY KEY: "Method parameter type not compatible"
+  - **need DDIC dependencies to reproduce** (ed-holland, deps not public): abaplint#3352 `READ TABLE` on a
+    TABLES work area "not a table type", abaplint#3361 `INCLUDE STRUCTURE bdclm` "not structured"
+  - not parsing, rule ideas only (leave): #737, #1855, #1933, #2234, #2381, #3244, #3825
+
+## Fork branches
+
+Cleaned up 2026-11-21: all merged branches deleted on the fork and locally. Left: `main`, `agenda`,
+`types-alias-qualified-name` (abaplint#4612).
 
 ## Done
 

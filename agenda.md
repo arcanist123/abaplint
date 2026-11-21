@@ -77,8 +77,12 @@ Reproduced with check_syntax and the rules on main: abaplint misses all five. On
 - [ ] **#1738** DEFAULT and OPTIONAL on the same parameter: expected to be a syntax error at `OPTIONAL`.
   PR abaplint#4632, tests in `test/abap/syntax/method_param_keyword.ts`
 - [ ] **#2556** type used in the class definition before its `TYPES`: expected error "type unknown", both when the
-  type follows in the same section and in a later one. `class_definition.ts` collects all types first; the method
-  parameters have to see only the types defined before them
+  type follows in the same section and in a later one. Branch `type-before-definition`, pushed, PR not opened yet:
+  while a METHODS statement is checked, `CurrentScope.findType` skips the class or interface types defined after
+  it and keeps searching outward (a program type of the same name is used, as expected in ABAP); reported by
+  unknown_types, tests in `test/rules/unknown_types.ts`. DATA, CONSTANTS, TYPES before their TYPES were already
+  reported. Follow-ups of the same kind, later PRs: `METHODS m IMPORTING p LIKE mv` before `DATA mv`, `EVENTS`
+  parameters, `TYPE lcl=>ty` qualified with the class itself
 - [ ] **#1561** implement_methods false positive: interface implemented ABSTRACT in the super class with an alias,
   method redefined through the alias in the subclass that also implements an interface including the first one.
   Expected: no error
@@ -99,6 +103,19 @@ Reviewed earlier, 2026-11-21. Open with a PR: #3560 (#4625), #3212 (#4626), #261
 #2096 (#4627). Already fixed on main, asked the authors to close (comments 2026-11-21): #3715, #2274, #2099, #1727,
 #1712 (hover part not checked), #1695, #1539, #3161, #3596. #4393 / #2212 non-final global class with only a PUBLIC
 SECTION: in modern ABAP expected to be a warning, not an error; nothing for check_syntax, thread updated.
+
+### abaplint: redundant_conversion #4254 (mbtools, low priority, bug)
+
+`DATA(y) = CONV ty_p( 2 * x ).` with x of the same p type: the CONV is needed, without it the inline
+declaration gets the calculation type, not ty_p.
+
+- [x] reproduced on main 2026-11-21: no issue any more. Fixed after the issue was opened (2026-08-28) by larshp's
+  #4448 (merged 2026-10-15), which stopped reporting a CONV around arithmetic in an inline declaration; its test
+  `DATA(t31) = CONV f( t30 / 2 )` (cnt 0) in `test/rules/redundant_conversion.ts` is the f variant of the snippet
+- [ ] small PR: the snippet of the issue as a test in `test/rules/redundant_conversion.ts` (p with DECIMALS,
+  `2 * x`, cnt 0), plus the case that stays reported: `y = CONV ty_p( 2 * x ).` with `y TYPE ty_p` declared
+  (the assignment converts into ty_p by itself, cnt 1)
+- [ ] after the PR: comment on #4254 with #4448 and the test, mbtools closes (not my issue)
 
 ### abaplint: internal table issues, rest
 

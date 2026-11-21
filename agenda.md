@@ -27,12 +27,20 @@ git -C ../abaplint-agenda pull                                           # after
 - close only my own issues; for other people's fixed issues, comment with the evidence (PR, test) and let them close
 - small PRs: one issue per PR (or two that touch the same lines), a new error only for the exact case of the issue
 
-## In progress (status 2026-11-21 evening)
+## In progress (status 2026-11-21 late evening)
 
 ### abaplint: open PRs, CI green, waiting for review
 
 - [ ] **abaplint#4621** table with header line passed to a table parameter (#3209), branch `header-line-method-param`
 - [ ] **abaplint#4622** INSERT a character-like data object into a numeric table (#2455), branch `insert-text-into-numeric-table`
+- [ ] **abaplint#4625** `me` cannot be used in static methods (#3560), branch `me-in-static-method`
+- [ ] **abaplint#4626** implement_methods: a method once when its interface is reached via several interfaces (#3212;
+  maybe also #3594, not verified), branch `implement-methods-duplicates`
+- [ ] **abaplint#4627** `me` cannot be declared as parameter, attribute or variable in classes (#2096; `super`,
+  `space` from the comments not covered), branch `me-reserved-name`
+- [ ] **abaplint#4628** FOR TESTING method in a class which is not a test class (#2612; void super class not
+  reported), branch `for-testing-in-non-test-class`
+- #4625, #4627, #4628 add tests at the same place in `test/abap/syntax/syntax.ts`: expect a conflict after the first merge
 
 ### transpiler: open PRs
 
@@ -125,6 +133,24 @@ Found in the type-by-type review (2026-11-20); passing operations are covered by
   - #2207 template ALPHA = OUT on n drops the field length, all zeros give an empty text
 
 Not reviewed yet: c, string, x, xstring, d, t, utclong.
+
+### abaplint: class issues, rest
+
+Reviewed 2026-11-21 (each snippet through check_syntax on main). Open with a PR: #3560 (#4625), #3212 (#4626),
+#2096 (#4627), #2612 (#4628). Already fixed on main, asked the authors to close (comments 2026-11-21): #3715, #2274,
+#2099, #1727, #1712 (hover part not checked), #1695, #1539, #3161, #3596.
+
+- [x] #4393 / #2212 non-final global class with only a PUBLIC SECTION: **false positive**. Measured on A4H
+  2026-11-21: syntax check gives a warning (W, "... must exist in global classes"), not an error, and the class
+  activates (activation log W, `forceSupported: true`). Nothing for check_syntax; thread updated. Leftover test
+  class `ZCL_ABAPLINT_4393_A` in `$TMP` on A4H, to delete
+- [ ] #3593 `METHODS setup FOR TESTING`: larshp says only a warning, leave
+- [ ] still reproduce, no PR yet: #2685 alias overlapping a method name; #2556 type used before its definition in
+  the class definition; #2097 write to a READ-ONLY attribute from outside (also interface attributes); #1738
+  DEFAULT and OPTIONAL together; #1561 implement_methods false positive, alias + REDEFINITION; #2033
+  prefix_is_current_class `me->attribute` (option request)
+- [ ] #1727 leftover: duplicate parameter names also give a follow-on "Method definition ... not found"
+- not checked: #1753 (needs the abapGit code), #3355 (needs the reporter's deps), #3730 (looks as expected)
 
 ### abaplint: internal table issues, rest
 

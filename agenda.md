@@ -39,6 +39,7 @@ git -C ../abaplint-agenda pull                                           # after
   reported), branch `for-testing-in-non-test-class`
 - [ ] **abaplint#4629** ALIASES name already used by a method, attribute or type (#2685), branch `alias-name-conflicts`
 - [ ] **abaplint#4632** DEFAULT and OPTIONAL on the same method parameter (closes #1738), branch `default-and-optional`
+- [ ] **abaplint#4633** METHODS see only the types defined above them (closes #2556), branch `type-before-definition`
 - [ ] **abaplint#4631** IntegerType: byte size for DDIC INT1 and INT2 (closes #4630, my issue), branch `integer-bytes`;
   the abaplint side of transpiler#2199
 - #4625 and #4628 add tests at the same place in `test/abap/syntax/syntax.ts` as the merged #4627: a conflict is
@@ -77,7 +78,7 @@ Reproduced with check_syntax and the rules on main: abaplint misses all five. On
 - [ ] **#1738** DEFAULT and OPTIONAL on the same parameter: expected to be a syntax error at `OPTIONAL`.
   PR abaplint#4632, tests in `test/abap/syntax/method_param_keyword.ts`
 - [ ] **#2556** type used in the class definition before its `TYPES`: expected error "type unknown", both when the
-  type follows in the same section and in a later one. Branch `type-before-definition`, pushed, PR not opened yet:
+  type follows in the same section and in a later one. PR abaplint#4633, branch `type-before-definition`:
   while a METHODS statement is checked, `CurrentScope.findType` skips the class or interface types defined after
   it and keeps searching outward (a program type of the same name is used, as expected in ABAP); reported by
   unknown_types, tests in `test/rules/unknown_types.ts`. DATA, CONSTANTS, TYPES before their TYPES were already

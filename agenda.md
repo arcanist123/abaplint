@@ -1,6 +1,7 @@
 # Agenda
 
-Changes I want to get into abaplint/abaplint `main`, shared across laptops.
+Changes I want to get into abaplint/abaplint and abaplint/transpiler `main`, shared across laptops.
+Numbers: `abaplint#` = abaplint/abaplint, `transpiler#` = abaplint/transpiler.
 
 ## Purpose
 
@@ -10,6 +11,7 @@ as close to a real SAP system as possible, while keeping the output compilable t
 - SAP behaviour is the reference, not abaplint's rules: when they differ, follow the system
 - every behaviour is measured on a real system (A4H 7.58) before it goes into a test or a PR
 - no change that would stop the generated code from compiling to Go
+
 This branch (`agenda`) has no code, only this file. Pull before editing, push after.
 
 ```
@@ -17,112 +19,127 @@ git fetch origin agenda && git worktree add ../abaplint-agenda agenda   # first 
 git -C ../abaplint-agenda pull                                           # afterwards
 ```
 
-## In progress
+## In progress (status 2026-11-21)
 
-- [ ] **#1988 type D allows LENGTH** — branch `type-length-decimals-check` (local, not pushed yet)
-  - check_syntax: LENGTH only for c/n/x/p, DECIMALS only for p, neither on program-defined types
-  - to decide: is DECIMALS on `TYPE c` really rejected on a real system? delete the commented-out checks in `ddic.ts`?
-  - fork also has an older branch `type-length-decimals`, compare before opening the PR
+### abaplint
 
-## Open transpiler PRs (status 2026-11-20)
+- [ ] **abaplint#4612** TYPES TYPE <integer, string or table type> creates a new type (closes abaplint#4609),
+  branch `types-alias-qualified-name`. larshp asked to check conflicts (2026-11-21 10:36); main merged in
+  (0b412643, 11:03), mergeable, CI green, waiting for re-review
+- [ ] **abaplint#4610** DDIC name missing for data elements with a non-character domain (INT4, STRING_UNICODE)
+  and for table types (STRING_TABLE); measured on 7.58 in the issue, no PR yet. Same area as #4612, start after it is merged
 
-- #2163 CASE TYPE OF (#2156): changes requested by larshp, CI timed out twice (c9ede517, 4b480613),
-  stalled at ~97% of `npm test`; not reproducible locally, passed after merging main (b69fb1a7).
-  Comment asking for a re-review posted; main merged in again, CI green, waiting for larshp
-- #2162 CALL METHOD (name)=>(meth) local classes (#2157): Web check hung the same way once (flaky),
-  green after an empty "Rerun CI" commit (no admin rights for a rerun), waiting for review
-- #2151 VALUE integer literal above 2^53 (#2150): rebased onto main (3dba93c4), conflict in
-  `test/types/integer8.ts` resolved (kept both tests), CI green, waiting for review
-- #2168 hex to int8, last eight bytes, two's complement (#1673): opened 2026-11-20
-- #2169 int8 arithmetic overflow (#2042): opened 2026-11-20
-- #2173 tests for operations on p (tests only), opened 2026-11-20
-- #2184 tests for operations on decfloat16 and decfloat34 (tests only), opened 2026-11-20
-- #2191 tests for operations on f (tests only), opened 2026-11-20
-- #2194 tests for operations on i (tests only), opened 2026-11-20
-- #2198 tests for operations on int8 (tests only), opened 2026-11-20
-- #2200 tests for operations on INT1 and INT2 (tests only), opened 2026-11-20
+### transpiler: open PRs, waiting for review by larshp
+
+All CI green. Only #2163 has a review.
+
+- transpiler#2163 CASE TYPE OF (#2156): changes requested by larshp over CI timeouts (not reproducible locally);
+  main merged in, CI green, re-review asked for
+- transpiler#2162 CALL METHOD (name)=>(meth) finds local classes (#2157)
+- transpiler#2151 VALUE integer literal above 2^53 (#2150), rebased, `test/types/integer8.ts` conflict resolved
+- transpiler#2168 hex to int8, last eight bytes, two's complement (#1673)
+- transpiler#2169 int8 arithmetic overflow (#2042), branch `int8-overflow`
+- transpiler#2201 class constructors run at the first use of the class (closes #1849), opened 2026-11-20
+- tests only, checked on a real system: #2173 (p), #2184 (decfloat16/34), #2191 (f), #2194 (i), #2198 (int8),
+  #2200 (INT1/INT2), #2208 (n)
+- not mine: transpiler#2101 (christianguenter2) super class constructor calls reach the redefinition (#2100), still open
+
+To consider: 13 PRs queue on one reviewer, 7 of them tests only. Ask larshp which order he prefers, or bundle the test PRs.
 
 ## Next
 
-- [ ] transpiler: make sure inheritance behaves as on a real ABAP system
-  - review the inheritance tests the transpiler already has
-  - list the gaps and add tests for them
-  - syntax-check and run every new test on the real system before it goes into a PR
-  - 2026-11-20: 16 SAP-checked tests in `test/code_structure/inheritance.ts`, PR #2158, merged
-  - gaps raised 2026-11-20 (details in transpiler `instructions/inheritance-gaps.md`):
-    1. indirect and dynamic calls from a super class constructor reach the redefinition: #2100, fix in PR #2101 by christianguenter2
-    2. CASE TYPE OF: `WHEN TYPE x.` without INTO crashes, `WHEN TYPE <interface>` never matches: #2156, PR #2163 (changes requested over a CI timeout, see above)
-    3. class constructors run at load, SAP on first use: #1849, SAP timing measured and a proposal posted
-       (larshp is reluctant, overhead); prototype + measurements on branch `lazy-class-constructor`, results posted on #1849 2026-11-20, waiting for larshp on a PR
-       (design in transpiler `instructions/class-constructor-1849.md`), to share with oisee
+- [ ] transpiler: inheritance as on a real ABAP system
+  - 16 SAP-checked tests in `test/code_structure/inheritance.ts`, transpiler#2158, merged 2026-11-20
+  - gaps (details in transpiler `instructions/inheritance-gaps.md`), each fix PR brings its own test:
+    1. indirect and dynamic calls from a super class constructor reach the redefinition: #2100, PR #2101 (christianguenter2)
+    2. CASE TYPE OF: `WHEN TYPE x.` without INTO crashes, `WHEN TYPE <interface>` never matches: #2156, PR #2163
+    3. class constructors run at load, SAP on first use: #1849, PR #2201 (design in transpiler
+       `instructions/class-constructor-1849.md`, prototype on branch `lazy-class-constructor`); larshp was
+       reluctant over overhead, share with oisee
     4. `CALL METHOD ('LCL_X')=>('M')` does not find local classes: #2157, PR #2162
-  - each fix PR brings its own test
-- [ ] transpiler: open int8 issues raised by others (no comments yet, nobody on them as of 2026-11-20)
-  - #1963 (oisee) int8 to and from byte fields (x, xstring) disagree with ABAP 7.58; measured on 7.58 in the issue
-  - #1673 (larshp) int8 from hex can exceed the int8 range, should keep the last 8 bytes; same area as #1963: PR #2168
-  - #2042 (larshp) int8 arithmetic does not raise `CX_SY_ARITHMETIC_OVERFLOW`, results leave -2^63 .. 2^63-1:
-    PR #2169 (branch `int8-overflow`, e1d440cd).
-    p, f, decfloat34 targets compute as decfloat34 (no int8 overflow there, as on SAP); this also fixes
-    int8 / int8 into p or f (3.5, was 3). Known gap to mention in the PR: unary minus or abs( ) of the
-    int8 minimum into a p target still raises (stated in the PR)
+- [ ] transpiler: int8 issues raised by others
+  - #1963 (oisee) int8 to and from byte fields (x, xstring) disagree with ABAP 7.58; measured on 7.58 in the issue; nobody on it
+  - #1673 (larshp) int8 from hex keeps the last 8 bytes: PR #2168
+  - #2042 (larshp) int8 arithmetic overflow: PR #2169. p, f, decfloat34 targets compute as decfloat34 (no int8
+    overflow, as on SAP), also fixes int8 / int8 into p or f (3.5, was 3). Known gap stated in the PR: unary
+    minus or abs( ) of the int8 minimum into a p target still raises
   - re-check each behaviour on the real system before a PR
-- [ ] transpiler: issues found while fixing #2042, raised 2026-11-20
-  - #2165 `**` with int8 operands is exact, SAP calculates in f (CX_SY_CONVERSION_OVERFLOW into int8)
-  - #2166 comparing p with int8 goes through a double: digits lost above 2^53, RangeError for p with decimals
-  - #2167 arithmetic with p operands loses digits above 2^53
-- [ ] transpiler: p test coverage reviewed 2026-11-20: no tests for MOD, DIV, **, relational compares,
-  ADD/SUBTRACT/... statements, COLLECT/SORT/READ by a p field, SELECT/INSERT with p columns, template
-  SIGN/NUMBER/STYLE, EXACT, zero divide; a probe against SAP found (raised 2026-11-20):
+
+### Raised by me, nobody on them yet (transpiler)
+
+Found in the type-by-type review (2026-11-20). Passing operations are covered by the test PRs above.
+
+- found while fixing #2042: #2165 `**` with int8 is exact, SAP calculates in f; #2166 p compared with int8
+  through a double; #2167 p arithmetic loses digits above 2^53
+- p (not covered by tests yet: MOD, DIV, **, compares, ADD/SUBTRACT/..., COLLECT/SORT/READ by p, SELECT/INSERT
+  with p columns, template SIGN/NUMBER/STYLE, EXACT, zero divide):
   - #2170 unary minus applies to the whole expression, `- a + b` is `- ( a + b )` (all types)
   - #2171 MOD with p operands rounds the remainder, 7.5 MOD 2 gives 2
-  - #2172 p target too small for an arithmetic result: CX_SY_CONVERSION_OVERFLOW, SAP CX_SY_ARITHMETIC_OVERFLOW
-  - passing operations covered by tests in PR #2173
+  - #2172 p target too small: CX_SY_CONVERSION_OVERFLOW, SAP CX_SY_ARITHMETIC_OVERFLOW
   - #2174 p to c: number text instead of right-aligned, decimals, sign last; overflow not cut left with `*`
-  - #2175 p to n truncates and keeps the minus sign
-  - #2176 string templates ignore SIGN = LEFTPLUS/RIGHTPLUS/RIGHT, ALIGN with WIDTH, STYLE = SCIENTIFIC (p and i)
-- [ ] transpiler: decfloat16/34 reviewed 2026-11-20, passing operations in PR #2184; raised:
+  - #2175 p to n truncates and keeps the minus sign (comments: decfloat, f, i, n arithmetic too)
+  - #2176 string templates ignore SIGN = LEFTPLUS/RIGHTPLUS/RIGHT, ALIGN with WIDTH, STYLE = SCIENTIFIC
+- decfloat16/34:
   - #2177 ** with a fractional exponent and sqrt( ) as a double; sqrt( 6.25 ) gives the root of 6
   - #2178 integer literals into a decfloat34 target as a double (1 / 3)
   - #2179 decfloat34 to c and string: decimal comma, alignment, scale
   - #2180 f to decfloat34: SAP takes 17 digits (0.1 -> 0.10000000000000001)
   - #2181 no CX_SY_ARITHMETIC_OVERFLOW beyond the exponent range
-  - #2182 templates ignore SCIENTIFIC, ENGINEERING, SIGN_AS_POSTFIX, SCALE_PRESERVING, EXPONENT for decfloat
+  - #2182 templates ignore SCIENTIFIC, ENGINEERING, SIGN_AS_POSTFIX, SCALE_PRESERVING, EXPONENT
   - #2183 COLLECT sums decfloat34 as a double
-  - comments added: #2171 (MOD, decfloat too), #2175 (to n, decfloat too), #963 (decfloat16 not rounded to 16 digits)
-- [ ] transpiler: f reviewed 2026-11-20, passing operations in PR #2191; raised:
-  - #2185 f in string templates: 16 fixed decimals instead of the shortest text; ENGINEERING, EXPONENT ignored
+  - comment on #963 (decfloat16 not rounded to 16 digits)
+- f:
+  - #2185 f in templates: 16 fixed decimals instead of the shortest text; ENGINEERING, EXPONENT ignored
   - #2186 f to c: decimal comma, not right-aligned
   - #2187 f to p rounds a negative half up (Math.round)
   - #2188 f overflow gives Infinity instead of CX_SY_ARITHMETIC_OVERFLOW
-  - #2189 f to i / int8 beyond the range: no CX_SY_CONVERSION_OVERFLOW
+  - #2189 f to i / int8 beyond the range: no CX_SY_CONVERSION_OVERFLOW (comments: int8, p, text, n, ** into i)
   - #2190 sqrt/log/log10/acos outside the domain give NaN instead of CX_SY_ARG_OUT_OF_DOMAIN
-  - comment added: #2175 (to n, f too)
-- [ ] transpiler: i reviewed 2026-11-20, passing operations in PR #2194; raised:
-  - #2192 no CX_SY_ARITHMETIC_OVERFLOW for i (+, -, *, ADD, abs, COLLECT); the skipped integer.ts "overflow" test expects the wrong class
+- i:
+  - #2192 no CX_SY_ARITHMETIC_OVERFLOW for i; the skipped integer.ts "overflow" test expects the wrong class
   - #2193 i to a short c keeps the leading digits, SAP the right end with *
-  - comments added: #2189 (int8, p, text, ** into i: no CX_SY_CONVERSION_OVERFLOW), #2175 (to n, i too)
-- [ ] transpiler: int8 swept 2026-11-20 (earlier only bug fixes), passing operations in PR #2198; raised:
+- int8:
   - #2195 ipow( ) with an int8 base as a double (SAP exact; ** is f, #2165)
   - #2196 text with decimals to int8: JavaScript SyntaxError, SAP rounds ('2.5' -> 3)
   - #2197 template DECIMALS ignored for int8
-  - comments added: #2166 (int8 vs string), #2189 (text beyond int8), #2193 (to a short c), #2176 (SIGN/ALIGN/SCIENTIFIC)
-- [ ] transpiler: b and s (DDIC INT1/INT2, only reachable via DDIC) swept 2026-11-20, in-range operations in PR #2200; raised:
-  - #2199 b and s run as i (abaplint ddic.ts maps INT1/INT2 to IntegerType): no range check, DESCRIBE FIELD gives I 4
+- b and s (DDIC INT1/INT2):
+  - #2199 run as i (abaplint ddic.ts maps INT1/INT2 to IntegerType): no range check, DESCRIBE FIELD gives I 4
+- n:
+  - #2202 text to n keeps only the digits of a leading number: '12.5' gives 00012, '#' gives 00NaN
+  - #2203 n compared with c, string or n of another length as text, SAP compares numbers
+  - #2204 x to n gives zeros, n to x reads the digits as hex
+  - #2205 write to n with offset and length replaces the whole field
+  - #2206 n cannot hold blanks: SHIFT and TRANSLATE lose them
+  - #2207 template ALPHA = OUT on n drops the field length, all zeros give an empty text
 
-## Fork branches to clean up or finish
+Not reviewed yet: c, string, x, xstring, d, t, utclong.
 
-- `for-let-local-names`
-- `like-decimals`
-- `new-object-data-ref-inferred-type`
-- `hvam/align2310`, `hvam/memory2110`
+## Fork branches to delete (merged, squash)
+
+- `for-let-local-names` (abaplint#4562), `like-decimals` (abaplint#4603), `type-length-decimals` (abaplint#4602/#4603)
+- `new-object-data-ref-inferred-type` (abaplint#4484)
+- `loop-group-by-types` (abaplint#4551), `loop-group-by-descending` (abaplint#4600)
+- `syntax-predicate-numeric-functions` (abaplint#4545), `types-ddic-qualified-name` (abaplint#4611)
+- `old-style-length` (abaplint#4614)
+- `hvam/align2310` (abaplint#4483), `hvam/memory2110` (only an upstream commit)
 
 ## Done
 
+### abaplint
+
+- [x] abaplint#4614 length in brackets, `DATA foo(8) TYPE d` (closes #4613), merged 2026-11-21
+- [x] abaplint#4611 TYPES TYPE <DDIC structure> creates a new type (closes #4608), merged 2026-11-21
+- [x] abaplint#4602 LENGTH only for c/n/x/p, DECIMALS only for p (closes #1988), merged 2026-11-19
+- [x] abaplint#4603 DECIMALS with LIKE, merged 2026-11-19
+- [x] abaplint#4600 GROUP BY DESCENDING and AS TEXT (closes #4599), merged 2026-11-19
+- [x] abaplint#4551 LOOP AT ... GROUP BY typing (closes #4482), merged 2026-11-19
+- [x] abaplint#4545 predicate functions outside logical expressions, numeric functions in WRITE and MESSAGE, merged 2026-11-20
+- [x] abaplint#4562 FOR and LET local names, merged 2026-11-18
+
+### transpiler
+
+- [x] transpiler#2158 inheritance tests, checked on a real system, merged 2026-11-20
 - [x] transpiler#2155 int8 to string and c puts the sign last, as for i, merged 2026-11-20
-
+- [x] transpiler#2152, #2153, #2154 SHIFT IN BYTE MODE, flat structure moves, SORT without BY, merged 2026-11-20
 - [x] transpiler#2139 AS TEXT: SORT and FOR GROUPS (#2159), LOOP AT ... GROUP BY (#2161, issue #2160), merged 2026-11-20
-
 - [x] transpiler#2138 LOOP AT ... GROUP BY and LOOP AT GROUP (closes #2022), merged 2026-11-19
-- [x] #4551 LOOP AT ... GROUP BY typing (closes #4482)
-- [x] #4600 GROUP BY DESCENDING and AS TEXT (closes #4599)
-- [x] #4545 predicate functions outside logical expressions, numeric functions in WRITE and MESSAGE

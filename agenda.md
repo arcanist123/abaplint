@@ -23,20 +23,19 @@ git -C ../abaplint-agenda pull                                           # after
 
 ### abaplint
 
-- [ ] **abaplint#4615** DDIC name for data elements of every data type and for table types (closes #4610),
-  branch `ddic-name-all-types`, opened 2026-11-21, waiting for review. Local: new test passes, full suite passes
-  (only the usual 250ms timeouts under `--parallel`), lint and api-extractor clean
-- [ ] **abaplint#4616** HASHED key cannot be NON-UNIQUE, EMPTY KEY cannot be UNIQUE (#3218, #3924), branch `table-key-uniqueness`
-- [ ] **abaplint#4617** LIKE REF TO a generically typed data object (#3231), branch `like-ref-to-generic`
-- [ ] **abaplint#4618** MODIFY and INSERT short forms need a header line (#1790 part 1), branch `itab-short-forms-header-line`
+Open PRs (status 2026-11-21), all CI green, waiting for review:
 - [ ] **abaplint#4619** escaped function and method names, `!line_exists( )` (#2529), branch `escaped-method-names`
-- all opened 2026-11-21, waiting for review; all touch `test/abap/syntax/syntax.ts` at different places, #4615 and
-  #4617 touch `basic_types.ts` at different places (cloneType vs LIKE REF TO)
+- [ ] **abaplint#4620** DELETE short forms need a header line, outside a LOOP (closes #1790), branch `delete-itab-short-form`
+- [ ] **abaplint#4621** table with header line passed to a table parameter (#3209), branch `header-line-method-param`
+- [ ] **abaplint#4622** INSERT a character-like data object into a numeric table (#2455), branch `insert-text-into-numeric-table`
+- #4620 and #4621 both add tests near "ok, short forms with header line, MODIFY and INSERT, #1790" in
+  `test/abap/syntax/syntax.ts` (one after, one before that test); if one merges first, rebase the other
+
 - testing note: `npm test`/`--parallel` gives 25-37 "statement type" failures, all 250ms timeouts under load, and
   a timeout skips the rest of that file. Serial: `npx mocha --no-config --no-package --recursive build/test/abap/syntax`
   (the package.json `spec` overrides a folder argument otherwise; plain serial `npx mocha` stops after 15233 tests)
-- [ ] **abaplint#4610** DDIC name missing for data elements with a non-character domain (INT4, STRING_UNICODE)
-  and for table types (STRING_TABLE); measured on 7.58 in the issue, fixed by PR #4615
+- [x] **abaplint#4610** DDIC name missing for data elements with a non-character domain (INT4, STRING_UNICODE)
+  and for table types (STRING_TABLE); measured on 7.58 in the issue, fixed by PR #4615, merged 2026-11-21
   - checked 2026-11-21 (scratchpad probe with Z objects): wider than the issue says. DDIC name set only for
     CHAR-like and packed types (DEC, CURR, QUAN, decfloat) and structures; missing for INT1/2/4, INT8, NUMC, RAW,
     DATS, TIMS, FLTP, STRING, XSTRING (domain-based and predefined-type data elements alike) and for every TTYP
@@ -174,7 +173,7 @@ Rules for these PRs (larshp reviews each one):
 - a new error fires only for the exact case of the issue, nothing broader
 - only if several of these PRs are open at the same time: keep them on different source files
 
-Priority 1, all opened 2026-11-21 (see In progress):
+Priority 1, all opened 2026-11-21; #4616, #4617, #4618 merged 2026-11-21:
 - [x] PR 1 = abaplint#4616: #3218 + #3924 table keys, in `5_syntax/expressions/type_table.ts`: error for an explicit
   `NON-UNIQUE` primary key on HASHED, and for `UNIQUE EMPTY KEY`; a hashed `WITH KEY` without uniqueness stays allowed
 - [x] PR 2 = abaplint#4617: #3231 `LIKE REF TO` a generically typed data object: error in the `LIKE REF TO`
@@ -187,13 +186,14 @@ Priority 1, all opened 2026-11-21 (see In progress):
   `method_call_chain.ts` and `_builtin_call.ts`. Accepts more, no breakage.
   Follow-up: transpiler test that `!lines( )` works
 
-Priority 2, more care:
-- [ ] PR 5: #1790 part 2, `DELETE itab.`: valid inside `LOOP AT itab` (deletes the current line) on any index table,
-  outside it needs a header line; needs the loop stack (`loopTables` in `syntax.ts`) passed via `SyntaxInput`
-- [ ] PR 6: #3209 table with header line, without `[]`, to a table-typed method parameter: check in
-  `method_call_param.ts`, not in `TypeUtils.isAssignableStrict`; first make sure `tab[]` resolves without header line
-- [ ] PR 7: #2455 `INSERT str INTO TABLE int_tab`: add the pair character-like source -> numeric row type to the
-  special cases in `insert_internal.ts`, no general "must be compatible" rule
+Priority 2, all opened 2026-11-21:
+- [x] PR 5 = abaplint#4620: #1790 part 2, `DELETE itab.` reported only outside any LOOP structure (`inLoop` flag on
+  `SyntaxInput`, loop depth counter in `syntax.ts`), plus `DELETE TABLE itab.` without FROM / WITH TABLE KEY
+- [x] PR 6 = abaplint#4621: #3209 header line table without `[]` to a table-typed parameter: helper
+  `_check_header_line.ts`, called for the unnamed argument (`method_call_param.ts`) and named EXPORTING
+  (`method_parameters.ts`); `tab[]` resolves to the same type as `tab`, so the check looks at the field chain
+- [x] PR 7 = abaplint#4622: #2455 character-like data object (string, c; not literals) into a table with a numeric row
+  type (i, int8, p, f, decfloat), one more special case in `insert_internal.ts`
 
 Priority 3, unclear or outside 7.58:
 - [ ] #3041 `APPEND INITIAL LINE TO sorted_tab`: the issue gives no SAP message, the docs suggest a runtime check
@@ -204,12 +204,16 @@ Priority 3, unclear or outside 7.58:
 
 ## Fork branches
 
-Cleaned up 2026-11-21: all merged branches deleted on the fork and locally. Left: `main`, `agenda`.
+Cleaned up 2026-11-21: all merged branches deleted on the fork and locally. Left: `main`, `agenda`, and the branches of the open PRs.
 
 ## Done
 
 ### abaplint
 
+- [x] abaplint#4618 MODIFY and INSERT short forms need a header line (#1790 part 1), merged 2026-11-21
+- [x] abaplint#4617 LIKE REF TO a generically typed data object (closes #3231), merged 2026-11-21
+- [x] abaplint#4616 HASHED key cannot be NON-UNIQUE, EMPTY KEY cannot be UNIQUE (closes #3218, #3924), merged 2026-11-21
+- [x] abaplint#4615 DDIC name for data elements of every data type and for table types (closes #4610), merged 2026-11-21
 - [x] abaplint#4612 TYPES TYPE <integer, string or table type> creates a new type (closes #4609), merged 2026-11-21
 - [x] abaplint#4614 length in brackets, `DATA foo(8) TYPE d` (closes #4613), merged 2026-11-21
 - [x] abaplint#4611 TYPES TYPE <DDIC structure> creates a new type (closes #4608), merged 2026-11-21

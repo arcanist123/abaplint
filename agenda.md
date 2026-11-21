@@ -38,6 +38,7 @@ git -C ../abaplint-agenda pull                                           # after
 - [ ] **abaplint#4628** FOR TESTING method in a class which is not a test class (#2612; void super class not
   reported), branch `for-testing-in-non-test-class`
 - [ ] **abaplint#4629** ALIASES name already used by a method, attribute or type (#2685), branch `alias-name-conflicts`
+- [ ] **abaplint#4632** DEFAULT and OPTIONAL on the same method parameter (closes #1738), branch `default-and-optional`
 - [ ] **abaplint#4631** IntegerType: byte size for DDIC INT1 and INT2 (closes #4630, my issue), branch `integer-bytes`;
   the abaplint side of transpiler#2199
 - #4625 and #4628 add tests at the same place in `test/abap/syntax/syntax.ts` as the merged #4627: a conflict is

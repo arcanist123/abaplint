@@ -143,6 +143,40 @@ Not reviewed yet: c, string, x, xstring, d, t, utclong.
     TABLES work area "not a table type", abaplint#3361 `INCLUDE STRUCTURE bdclm` "not structured"
   - not parsing, rule ideas only (leave): #737, #1855, #1933, #2234, #2381, #3244, #3825
 
+#### Fix plan (2026-11-21), target 7.58 (816), reporters assumed right for now
+
+Rules for these PRs (larshp reviews each one):
+- one issue per PR (or two that touch the same lines), ~10-30 lines of code plus tests in `test/rules/check_syntax.ts`
+- a new error fires only for the exact case of the issue, nothing broader
+- tests next to related tests, not at the end of the file (conflicts, see abaplint#4612); no two open PRs on the
+  same source file; at most 2-3 open at once
+
+Priority 1, small and safe, independent files (can run two in parallel):
+- [ ] PR 1: #3218 + #3924 table keys, in `5_syntax/expressions/type_table.ts`: error for an explicit `NON-UNIQUE`
+  key on HASHED, and for `UNIQUE EMPTY KEY`; a hashed `WITH KEY` without uniqueness stays allowed (generic, TYPES)
+- [ ] PR 2: #3231 `LIKE REF TO` a generically typed data object (`TYPE data`, `any`): error in the `LIKE REF TO`
+  branch of `basic_types.ts` (`DataReference` of `data` is not generic, as `TYPE REF TO data` is valid)
+- [ ] PR 3: #1790 part 1, `MODIFY itab.` and `INSERT itab.` on a table without a header line:
+  `modify_internal.ts`, `insert_internal.ts`
+- [ ] PR 4: #2529 `!` before function and method names: `MethodName` regex `^!?`, strip the `!` in the method /
+  builtin lookup (precedent: ClassName, MethodParamName, FormName, `_current_scope.ts`). Accepts more, no breakage.
+  Follow-up: transpiler test that `!lines( )` works
+
+Priority 2, more care:
+- [ ] PR 5: #1790 part 2, `DELETE itab.`: valid inside `LOOP AT itab` (deletes the current line) on any index table,
+  outside it needs a header line; needs the loop stack (`loopTables` in `syntax.ts`) passed via `SyntaxInput`
+- [ ] PR 6: #3209 table with header line, without `[]`, to a table-typed method parameter: check in
+  `method_call_param.ts`, not in `TypeUtils.isAssignableStrict`; first make sure `tab[]` resolves without header line
+- [ ] PR 7: #2455 `INSERT str INTO TABLE int_tab`: add the pair character-like source -> numeric row type to the
+  special cases in `insert_internal.ts`, no general "must be compatible" rule
+
+Priority 3, unclear or outside 7.58:
+- [ ] #3041 `APPEND INITIAL LINE TO sorted_tab`: the issue gives no SAP message, the docs suggest a runtime check
+  (ITAB_ILLEGAL_SORT_ORDER); measure on 7.58 before any PR, ask to close if runtime only
+- [ ] #1545 `FILTER ... IN` below 7.51: one line, `ver(Release.v751, ...)` in `filter_body.ts`; optional
+- [ ] #1459 v702 method call in `READ TABLE ... WITH KEY`: the shared `SimpleSource4` allows method calls in all
+  statements, a fix touches widely used grammar; defer
+
 ## Fork branches
 
 Cleaned up 2026-11-21: all merged branches deleted on the fork and locally. Left: `main`, `agenda`,

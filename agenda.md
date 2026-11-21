@@ -23,20 +23,24 @@ git -C ../abaplint-agenda pull                                           # after
 
 ### abaplint
 
-No open abaplint PRs (2026-11-21).
-
+- [ ] **abaplint#4615** DDIC name for data elements of every data type and for table types (closes #4610),
+  branch `ddic-name-all-types`, opened 2026-11-21, waiting for review. Local: new test passes, full suite passes
+  (only the usual 250ms timeouts under `--parallel`), lint and api-extractor clean
 - [ ] **abaplint#4610** DDIC name missing for data elements with a non-character domain (INT4, STRING_UNICODE)
-  and for table types (STRING_TABLE); measured on 7.58 in the issue, no PR yet
+  and for table types (STRING_TABLE); measured on 7.58 in the issue, fixed by PR #4615
   - checked 2026-11-21 (scratchpad probe with Z objects): wider than the issue says. DDIC name set only for
-    CHAR-like and packed types and structures; missing for INT1/2/4, INT8, NUMC, RAW, DATS, TIMS, FLTP, decfloat,
-    STRING, XSTRING (domain-based and predefined-type data elements alike) and for every TTYP
+    CHAR-like and packed types (DEC, CURR, QUAN, decfloat) and structures; missing for INT1/2/4, INT8, NUMC, RAW,
+    DATS, TIMS, FLTP, STRING, XSTRING (domain-based and predefined-type data elements alike) and for every TTYP
   - cause 1: `DDIC.textToType` (`ddic.ts`) builds `extra` (qualifiedName, conversionExit, ddicName, description)
     but passes only `{qualifiedName}` to these types; `NumericType`, `HexType`, `FloatingPointType` constructors
     take only a qualifiedName string. Conversion exit and description are lost the same way (NUMC with ALPHA)
   - cause 2: `objects/table_type.ts` `parseType` never sets a DDIC name, `TableType` constructor has no parameter for it
-  - plan, one PR, two commits: (1) pass `extra` to all types in `textToType`, widen the three constructors to
-    `string | AbstractTypeData` (keeps the public API); (2) `TableType` takes a ddicName, TTYP passes its name.
-    Tests in `test/abap/syntax/basic_variables.ts` next to the existing getDDICName tests (~line 1354-1491)
+  - PR #4615, two commits: (1) pass `extra` to all types in `textToType`, widen the three constructors to
+    `string | AbstractTypeData` (keeps the public API), and `cloneType` (`basic_types.ts`) also handles xstring,
+    int8, n, x, f, d, t so `TYPES ty TYPE <dtel>` clears the DDIC name (#4609); (2) `TableType` takes a ddicName,
+    TTYP passes its name. Test in `test/abap/syntax/basic_variables.ts` after the existing getDDICName tests
+  - not in the PR: `cloneType` still does not handle packed (`TYPES ty TYPE <DEC dtel>` keeps the DDIC name),
+    pre-existing; a small follow-up if wanted
   - transpiler follow-up: `transpile_types.ts` emits ddicName only for Character and Structure, so RTTI
     `is_ddic_type( )` for i, string, n, x, tables needs a transpiler PR too (runtime types carry `extra`)
 

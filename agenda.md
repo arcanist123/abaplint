@@ -26,6 +26,15 @@ git -C ../abaplint-agenda pull                                           # after
 - [ ] **abaplint#4615** DDIC name for data elements of every data type and for table types (closes #4610),
   branch `ddic-name-all-types`, opened 2026-11-21, waiting for review. Local: new test passes, full suite passes
   (only the usual 250ms timeouts under `--parallel`), lint and api-extractor clean
+- [ ] **abaplint#4616** HASHED key cannot be NON-UNIQUE, EMPTY KEY cannot be UNIQUE (#3218, #3924), branch `table-key-uniqueness`
+- [ ] **abaplint#4617** LIKE REF TO a generically typed data object (#3231), branch `like-ref-to-generic`
+- [ ] **abaplint#4618** MODIFY and INSERT short forms need a header line (#1790 part 1), branch `itab-short-forms-header-line`
+- [ ] **abaplint#4619** escaped function and method names, `!line_exists( )` (#2529), branch `escaped-method-names`
+- all opened 2026-11-21, waiting for review; all touch `test/abap/syntax/syntax.ts` at different places, #4615 and
+  #4617 touch `basic_types.ts` at different places (cloneType vs LIKE REF TO)
+- testing note: `npm test`/`--parallel` gives 25-37 "statement type" failures, all 250ms timeouts under load, and
+  a timeout skips the rest of that file. Serial: `npx mocha --no-config --no-package --recursive build/test/abap/syntax`
+  (the package.json `spec` overrides a folder argument otherwise; plain serial `npx mocha` stops after 15233 tests)
 - [ ] **abaplint#4610** DDIC name missing for data elements with a non-character domain (INT4, STRING_UNICODE)
   and for table types (STRING_TABLE); measured on 7.58 in the issue, fixed by PR #4615
   - checked 2026-11-21 (scratchpad probe with Z objects): wider than the issue says. DDIC name set only for
@@ -165,15 +174,17 @@ Rules for these PRs (larshp reviews each one):
 - a new error fires only for the exact case of the issue, nothing broader
 - only if several of these PRs are open at the same time: keep them on different source files
 
-Priority 1, small and safe, independent files (can run two in parallel):
-- [ ] PR 1: #3218 + #3924 table keys, in `5_syntax/expressions/type_table.ts`: error for an explicit `NON-UNIQUE`
-  key on HASHED, and for `UNIQUE EMPTY KEY`; a hashed `WITH KEY` without uniqueness stays allowed (generic, TYPES)
-- [ ] PR 2: #3231 `LIKE REF TO` a generically typed data object (`TYPE data`, `any`): error in the `LIKE REF TO`
+Priority 1, all opened 2026-11-21 (see In progress):
+- [x] PR 1 = abaplint#4616: #3218 + #3924 table keys, in `5_syntax/expressions/type_table.ts`: error for an explicit
+  `NON-UNIQUE` primary key on HASHED, and for `UNIQUE EMPTY KEY`; a hashed `WITH KEY` without uniqueness stays allowed
+- [x] PR 2 = abaplint#4617: #3231 `LIKE REF TO` a generically typed data object: error in the `LIKE REF TO`
   branch of `basic_types.ts` (`DataReference` of `data` is not generic, as `TYPE REF TO data` is valid)
-- [ ] PR 3: #1790 part 1, `MODIFY itab.` and `INSERT itab.` on a table without a header line:
-  `modify_internal.ts`, `insert_internal.ts`
-- [ ] PR 4: #2529 `!` before function and method names: `MethodName` regex `^!?`, strip the `!` in the method /
-  builtin lookup (precedent: ClassName, MethodParamName, FormName, `_current_scope.ts`). Accepts more, no breakage.
+- [x] PR 3 = abaplint#4618: #1790 part 1, `MODIFY itab.` (no FROM) in `modify_internal.ts`; `INSERT itab.` parses
+  as InsertDatabase (context-free parser, InsertInternal grammar has no form without INTO/INDEX/TABLE), so the check
+  is in `insert_database.ts` (option A). Option B, `INSERT itab.` in the InsertInternal grammar, is a design question
+  for larshp, not raised yet
+- [x] PR 4 = abaplint#4619: #2529 `!` before function and method names: `MethodName` regex `^!?`, `!` stripped in
+  `method_call_chain.ts` and `_builtin_call.ts`. Accepts more, no breakage.
   Follow-up: transpiler test that `!lines( )` works
 
 Priority 2, more care:

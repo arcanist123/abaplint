@@ -134,7 +134,13 @@ export class InterfaceDefinition extends Identifier implements IInterfaceDefinit
         input.issues.push(syntaxIssue(input, e.getFirstToken(), "Event " + eventName + " already defined"));
         continue;
       }
-      this.events.push(new EventDefinition(e, Visibility.Public, input));
+      // the parameters only see the types and attributes defined above the EVENTS statement
+      input.scope.setDefinedBefore(e.getStart(), input.filename);
+      try {
+        this.events.push(new EventDefinition(e, Visibility.Public, input));
+      } finally {
+        input.scope.setDefinedBefore(undefined, input.filename);
+      }
     }
 
     this.methodDefinitions = new MethodDefinitions(node, input);

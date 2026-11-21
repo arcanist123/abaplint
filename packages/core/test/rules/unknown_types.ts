@@ -325,6 +325,102 @@ ENDCLASS.`;
       const param = cdef?.getMethodDefinitions().getByName("add_edge")?.getParameters().getImporting()[0];
       expect(param?.getType()).to.be.instanceOf(IntegerType);
     });
+
+    it("LIKE an attribute declared after the METHODS statement, error", () => {
+      const issues = run(`
+CLASS lcl DEFINITION.
+  PUBLIC SECTION.
+    METHODS m IMPORTING p LIKE mv.
+    DATA mv TYPE i.
+ENDCLASS.
+CLASS lcl IMPLEMENTATION.
+  METHOD m.
+    RETURN.
+  ENDMETHOD.
+ENDCLASS.`);
+      expect(issues.length).to.equal(1);
+      expect(issues[0].getMessage()).to.contain(`could not resolve "mv"`);
+    });
+
+    it("LIKE an attribute declared before the METHODS statement, ok", () => {
+      const issues = run(`
+CLASS lcl DEFINITION.
+  PUBLIC SECTION.
+    DATA mv TYPE i.
+    METHODS m IMPORTING p LIKE mv.
+ENDCLASS.
+CLASS lcl IMPLEMENTATION.
+  METHOD m.
+    RETURN.
+  ENDMETHOD.
+ENDCLASS.`);
+      expect(issues.length).to.equal(0);
+    });
+
+    it("EVENTS parameter typed with a type defined after it, class and interface, error", () => {
+      expect(run(`
+CLASS lcl DEFINITION.
+  PUBLIC SECTION.
+    EVENTS ev EXPORTING VALUE(p) TYPE ty_edge.
+    TYPES ty_edge TYPE string.
+ENDCLASS.
+CLASS lcl IMPLEMENTATION.
+ENDCLASS.`).length).to.equal(1);
+      expect(run(`
+INTERFACE lif.
+  EVENTS ev EXPORTING VALUE(p) TYPE ty_edge.
+  TYPES ty_edge TYPE string.
+ENDINTERFACE.`).length).to.equal(1);
+    });
+
+    it("TYPE lcl=>ty_edge inside lcl before the TYPES, error", () => {
+      const issues = run(`
+CLASS lcl DEFINITION.
+  PUBLIC SECTION.
+    METHODS m IMPORTING p TYPE lcl=>ty_edge.
+    TYPES ty_edge TYPE string.
+ENDCLASS.
+CLASS lcl IMPLEMENTATION.
+  METHOD m.
+    RETURN.
+  ENDMETHOD.
+ENDCLASS.`);
+      expect(issues.length).to.equal(1);
+      expect(issues[0].getMessage()).to.contain("TY_EDGE not found in class or interface");
+    });
+
+    it("TYPE lcl=>ty_edge and EVENTS after the TYPES, ok", () => {
+      const issues = run(`
+CLASS lcl DEFINITION.
+  PUBLIC SECTION.
+    TYPES ty_edge TYPE string.
+    METHODS m IMPORTING p TYPE lcl=>ty_edge.
+    EVENTS ev EXPORTING VALUE(q) TYPE ty_edge.
+ENDCLASS.
+CLASS lcl IMPLEMENTATION.
+  METHOD m.
+    RETURN.
+  ENDMETHOD.
+ENDCLASS.`);
+      expect(issues.length).to.equal(0);
+    });
+
+    it("DEFAULT with a constant declared after the METHODS statement, check_syntax error", () => {
+      const abap = `
+CLASS lcl DEFINITION.
+  PUBLIC SECTION.
+    METHODS m IMPORTING p TYPE i DEFAULT c_def.
+    CONSTANTS c_def TYPE i VALUE 1.
+ENDCLASS.
+CLASS lcl IMPLEMENTATION.
+  METHOD m.
+    RETURN.
+  ENDMETHOD.
+ENDCLASS.`;
+      const issues = runMulti([{filename: "zfoobar.prog.abap", contents: abap}]).filter(i => i.getKey() === "check_syntax");
+      expect(issues.length).to.equal(1);
+      expect(issues[0].getMessage()).to.contain(`"c_def" not found`);
+    });
   });
 
   it("ms_metadata could not be resolved, expect error", () => {

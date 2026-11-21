@@ -802,6 +802,9 @@ export class BasicTypes {
         if (token) {
           this.input.scope.addReference(token, foundId, ReferenceType.TypeReference, this.input.filename);
         }
+      } else if (this.input.scope.findOwnTypeDefinedBefore(className, subs[0]) === null) {
+        // "lcl=>ty" in the definition of lcl, before the TYPES of ty
+        return new Types.UnknownType(subs[0] + " not found in class or interface");
       } else {
     // lookup in local and global scope
         const obj = this.input.scope.findObjectDefinition(className);

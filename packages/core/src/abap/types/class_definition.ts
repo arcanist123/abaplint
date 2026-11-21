@@ -73,7 +73,13 @@ export class ClassDefinition extends Identifier implements IClassDefinition {
         input.issues.push(syntaxIssue(input, e.getFirstToken(), "Event " + eventName + " already defined"));
         continue;
       }
-      this.events.push(new EventDefinition(e, Visibility.Public, input)); // todo, all these are not Public
+      // the parameters only see the types and attributes defined above the EVENTS statement
+      input.scope.setDefinedBefore(e.getStart(), input.filename);
+      try {
+        this.events.push(new EventDefinition(e, Visibility.Public, input)); // todo, all these are not Public
+      } finally {
+        input.scope.setDefinedBefore(undefined, input.filename);
+      }
     }
 
     this.methodDefs = new MethodDefinitions(node, input);

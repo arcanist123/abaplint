@@ -41,9 +41,9 @@ export class CurrentScope {
   /** row type of the members of a group, key is the identifier of the group variable,
    *  a LOOP AT ... GROUP BY binds the group until its ENDLOOP */
   private readonly groupMemberTypes: Map<string, AbstractType> = new Map();
-  /** set while a statement of a class or interface definition is checked that only sees
-   *  the types defined above it, the types of that scope node defined later are skipped */
-  private typesDefinedBefore: {node: SpaghettiScopeNode, filename: string, position: Position} | undefined;
+  /** set while a statement of a class or interface definition is checked that only sees the types and
+   *  attributes defined above it, the ones of that scope node defined later are skipped */
+  private definedBefore: {node: SpaghettiScopeNode, filename: string, position: Position} | undefined;
 
   public static buildDefault(reg: IRegistry, obj: IObject): CurrentScope {
     const s = new CurrentScope(reg, obj);
@@ -489,22 +489,44 @@ export class CurrentScope {
     return this.current?.findFormDefinition(name);
   }
 
-  /** only the types of the current class or interface definition defined before the position are visible,
-   *  undefined makes all of them visible again */
-  public setTypesDefinedBefore(position: Position | undefined, filename: string): void {
+  /** only the types and attributes of the current class or interface definition defined before the position
+   *  are visible, undefined makes all of them visible again */
+  public setDefinedBefore(position: Position | undefined, filename: string): void {
     if (position === undefined || this.current === undefined) {
-      this.typesDefinedBefore = undefined;
+      this.definedBefore = undefined;
     } else {
-      this.typesDefinedBefore = {node: this.current, filename, position};
+      this.definedBefore = {node: this.current, filename, position};
     }
+  }
+
+  /** false for a type or attribute of the class or interface definition defined after the position set */
+  private isDefinedBefore(search: SpaghettiScopeNode, found: TypedIdentifier): boolean {
+    const before = this.definedBefore;
+    return before === undefined
+      || search !== before.node
+      || found.getFilename() !== before.filename
+      || found.getStart().isAfter(before.position) === false;
+  }
+
+  /** "lcl=>ty" inside the definition of lcl, while a position is set: the type if defined before it,
+   *  null if not defined before it, undefined when the name is not the class or interface being defined */
+  public findOwnTypeDefinedBefore(ooName: string, typeName: string): TypedIdentifier | null | undefined {
+    const before = this.definedBefore;
+    if (before === undefined || before.node.getIdentifier().sname.toUpperCase() !== ooName.toUpperCase()) {
+      return undefined;
+    }
+    const found = before.node.getData().types[typeName.toUpperCase()];
+    if (found === undefined || this.isDefinedBefore(before.node, found) === false) {
+      return null;
+    }
+    return found;
   }
 
   public findType(name: string | undefined): TypedIdentifier | undefined {
     if (name === undefined) {
       return undefined;
     }
-    const before = this.typesDefinedBefore;
-    if (before === undefined) {
+    if (this.definedBefore === undefined) {
       return this.current?.findType(name);
     }
 
@@ -512,10 +534,7 @@ export class CurrentScope {
     let search: SpaghettiScopeNode | undefined = this.current;
     while (search !== undefined) {
       const found = search.getData().types[upper];
-      if (found !== undefined
-          && !(search === before.node
-            && found.getFilename() === before.filename
-            && found.getStart().isAfter(before.position))) {
+      if (found !== undefined && this.isDefinedBefore(search, found)) {
         return found;
       }
       search = search.getParent();
@@ -535,11 +554,24 @@ export class CurrentScope {
       return undefined;
     }
     name = name.replace(/^!/, "");
-    const found = this.current?.findVariable(name);
+    const found = this.definedBefore === undefined ? this.current?.findVariable(name) : this.findVariableDefinedBefore(name);
     if (found) {
       return found;
     }
     return this.findTypePoolConstant(name);
+  }
+
+  private findVariableDefinedBefore(name: string): TypedIdentifier | undefined {
+    const upper = name.toUpperCase();
+    let search: SpaghettiScopeNode | undefined = this.current;
+    while (search !== undefined) {
+      const found = search.getData().vars[upper];
+      if (found !== undefined && this.isDefinedBefore(search, found)) {
+        return found;
+      }
+      search = search.getParent();
+    }
+    return undefined;
   }
 
   public findReturningParameter(): TypedIdentifier | undefined {

@@ -75,7 +75,7 @@ Asked larshp to close (comment 2026-11-21): transpiler#636, fixed by #1178, test
 Reproduced with check_syntax and the rules on main: abaplint misses all five. One PR each, in this order.
 
 - [ ] **#1738** DEFAULT and OPTIONAL on the same parameter: expected to be a syntax error at `OPTIONAL`.
-  Small and isolated, branch `default-and-optional`
+  PR abaplint#4632, tests in `test/abap/syntax/method_param_keyword.ts`
 - [ ] **#2556** type used in the class definition before its `TYPES`: expected error "type unknown", both when the
   type follows in the same section and in a later one. `class_definition.ts` collects all types first; the method
   parameters have to see only the types defined before them

@@ -5,7 +5,7 @@ Numbers: `abaplint#` = abaplint/abaplint, `transpiler#` = abaplint/transpiler.
 
 ## Purpose
 
-Support the open-steamgate development of Alice Vinogradova (oisee): make the abaplint parser and the transpiler behave
+Support the open-steamgate development of oisee: make the abaplint parser and the transpiler behave
 as close to a real SAP system as possible, while keeping the output compilable to Go.
 
 - SAP behaviour is the reference, not abaplint's rules: when they differ, follow the system

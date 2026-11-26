@@ -20,6 +20,11 @@ DATA x TYPE x LENGTH 4.
 DATA f TYPE f.
 DATA ref TYPE REF TO i.
 DATA tab TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
+DATA strings TYPE string_table.
+TYPES: BEGIN OF ty_row,
+         f TYPE string,
+       END OF ty_row.
+DATA rows TYPE STANDARD TABLE OF ty_row WITH DEFAULT KEY.
 FIELD-SYMBOLS <i> TYPE i.
 START-OF-SELECTION.
 ${body}`;
@@ -59,6 +64,47 @@ describe("syntax.ts, calculations after WHEN", () => {
   for (const value of ok) {
     it("ok, WHEN " + value, () => {
       expect(when(value)).to.deep.equal([]);
+    });
+  }
+
+  const expressions: [string, string][] = [
+    ["s && `a`", "String expression not allowed after WHEN"],
+    ["c && s && `a`", "String expression not allowed after WHEN"],
+    ["|a|", "String expression not allowed after WHEN"],
+    ["|a{ s }|", "String expression not allowed after WHEN"],
+    ["`a` OR s && `b`", "String expression not allowed after WHEN"],
+    ["x BIT-AND x", "Bit expression not allowed after WHEN"],
+    ["x BIT-OR x", "Bit expression not allowed after WHEN"],
+    ["x BIT-XOR x", "Bit expression not allowed after WHEN"],
+    ["BIT-NOT x", "Bit expression not allowed after WHEN"],
+    ["tab[ 1 ]", "Table expression not allowed after WHEN"],
+    ["rows[ 1 ]-f", "Table expression not allowed after WHEN"],
+    ["1 OR tab[ 1 ]", "Table expression not allowed after WHEN"],
+    ["condense( s )", "Built-in function \"condense\" not allowed after WHEN, only a numeric function"],
+    ["to_upper( s )", "Built-in function \"to_upper\" not allowed after WHEN, only a numeric function"],
+    ["substring( val = s off = 1 )", "Built-in function \"substring\" not allowed after WHEN, only a numeric function"],
+    ["repeat( val = s occ = 2 )", "Built-in function \"repeat\" not allowed after WHEN, only a numeric function"],
+    ["cmax( val1 = s val2 = c )", "Built-in function \"cmax\" not allowed after WHEN, only a numeric function"],
+    ["concat_lines_of( table = strings )", "Built-in function \"concat_lines_of\" not allowed after WHEN, only a numeric function"],
+    ["boolc( a = 1 )", "Built-in function \"boolc\" not allowed after WHEN, only a numeric function"],
+    ["xsdbool( a = 1 )", "Built-in function \"xsdbool\" not allowed after WHEN, only a numeric function"],
+  ];
+  for (const [value, message] of expressions) {
+    it("error, WHEN " + value, () => {
+      expect(when(value)).to.deep.equal([message]);
+    });
+  }
+
+  for (const value of ["'a' & 'b'", "CONV string( s && `a` )", "lcl=>get( strlen( s && `a` ) )", "strlen( s )"]) {
+    it("ok, WHEN " + value, () => {
+      expect(issuesOf(`CASE s.\n  WHEN ${value}.\nENDCASE.`)).to.deep.equal([]);
+    });
+  }
+
+  for (const operand of ["s && `a`", "|a|", "condense( s )", "to_upper( s )", "boolc( a = 1 )", "x BIT-AND x",
+    "BIT-NOT x", "strings[ 1 ]", "rows[ 1 ]-f"]) {
+    it("ok, CASE " + operand, () => {
+      expect(issuesOf(`CASE ${operand}.\n  WHEN \`a\`.\nENDCASE.`)).to.deep.equal([]);
     });
   }
 

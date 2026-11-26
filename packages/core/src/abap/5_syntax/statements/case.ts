@@ -1,6 +1,7 @@
 import * as Expressions from "../../2_statements/expressions";
 import {ExpressionNode, StatementNode, TokenNode} from "../../nodes";
 import {BuiltInCall} from "../_builtin_call";
+import {checkOperandParentheses, parenthesized} from "../_parentheses";
 import {Source} from "../expressions/source";
 import {Compare} from "../expressions/compare";
 import {StatementSyntax} from "../_statement_syntax";
@@ -18,6 +19,8 @@ export class Case implements StatementSyntax {
       if (inner !== undefined && isCalculation(inner, input) === false) {
         const message = "Parentheses after CASE only around a calculation, not around a single operand";
         input.issues.push(syntaxIssue(input, s.getFirstToken(), message));
+      } else {
+        checkOperandParentheses([s], input);
       }
       checkCaseOperand(s, input);
       // an arithmetic expression is calculated on its own, the values after WHEN are compared with its result
@@ -26,17 +29,6 @@ export class Case implements StatementSyntax {
       }
     }
   }
-}
-
-// the source inside the parentheses when the source is exactly "( ... )"
-export function parenthesized(source: ExpressionNode): ExpressionNode | undefined {
-  const children = source.getChildren();
-  if (children.length === 3
-      && children[0] instanceof TokenNode && children[0].getFirstToken().getStr() === "("
-      && children[1] instanceof ExpressionNode && children[1].get() instanceof Expressions.Source) {
-    return children[1];
-  }
-  return undefined;
 }
 
 // "a + 1", "- a", "BIT-NOT x", "x BIT-AND y", or a built-in numeric function of a calculated argument,

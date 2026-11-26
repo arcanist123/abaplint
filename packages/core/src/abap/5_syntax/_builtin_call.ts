@@ -48,7 +48,23 @@ export class BuiltInCall {
 
   // the call has a single argument, without a parameter name, that is a data object and not an expression
   public static hasDataObjectArgument(call: ExpressionNode): boolean {
-    const argument = call.findDirectExpression(Expressions.MethodCallParam)?.findDirectExpression(Expressions.Source);
+    return this.isDataObject(call.findDirectExpression(Expressions.MethodCallParam)?.findDirectExpression(Expressions.Source));
+  }
+
+  // the arguments of the call, unnamed or named, "abs( a )" or "ipow( base = a exp = 2 )"
+  public static callArguments(call: ExpressionNode): ExpressionNode[] {
+    const param = call.findDirectExpression(Expressions.MethodCallParam);
+    const unnamed = param?.findDirectExpression(Expressions.Source);
+    if (unnamed !== undefined) {
+      return [unnamed];
+    }
+    return (param?.findDirectExpression(Expressions.ParameterListS)?.findDirectExpressions(Expressions.ParameterS) || [])
+      .map(p => p.findDirectExpression(Expressions.Source))
+      .filter((s): s is ExpressionNode => s !== undefined);
+  }
+
+  // a data object and not an expression
+  public static isDataObject(argument: ExpressionNode | undefined): boolean {
     const children = argument?.getChildren() || [];
     // a literal or a text symbol, text-001
     if (children.length === 1

@@ -1,5 +1,5 @@
 import * as Expressions from "../../2_statements/expressions";
-import {ExpressionNode, StatementNode} from "../../nodes";
+import {ExpressionNode, StatementNode, TokenNode} from "../../nodes";
 import {Source} from "../expressions/source";
 import {Compare} from "../expressions/compare";
 import {StatementSyntax} from "../_statement_syntax";
@@ -40,11 +40,15 @@ export class When implements StatementSyntax {
 
   }
 
-  // a value after WHEN cannot be calculated, unlike the operand of CASE: no arithmetic expression, and of the
-  // numeric built-in functions only those with one unnamed argument, which is a data object
+  // a value after WHEN cannot be calculated, unlike the operand of CASE: no arithmetic expression, no
+  // parentheses, and of the numeric built-in functions only those with one unnamed argument, which is a data object
   private checkCalculation(source: ExpressionNode, input: SyntaxInput): string | undefined {
     if (Compare.isArithmetic(source, input)) {
       return "Arithmetic expression not allowed after WHEN";
+    }
+    const first = source.getChildren()[0];
+    if (first instanceof TokenNode && first.getFirstToken().getStr() === "(") {
+      return "Parentheses not allowed after WHEN";
     }
 
     const call = BuiltInCall.fromSource(source, input);

@@ -2563,7 +2563,7 @@ ENDCASE.`;
   it("CASE, built-in function with named argument, 740sp02", () => {
     const abap = `DATA foo TYPE string.
 CASE to_upper( foo ).
-  WHEN to_lower( foo ).
+  WHEN foo.
 ENDCASE.`;
     const issues = runProgram(abap, [], Release.v740sp02);
     expect(issues.length).to.equals(0);

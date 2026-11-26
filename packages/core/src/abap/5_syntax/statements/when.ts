@@ -40,22 +40,39 @@ export class When implements StatementSyntax {
 
   }
 
-  // a value after WHEN cannot be calculated, unlike the operand of CASE: no arithmetic expression, no
-  // parentheses, and of the numeric built-in functions only those with one unnamed argument, which is a data object
+  // a value after WHEN cannot be calculated, unlike the operand of CASE: no arithmetic, string or bit expression, no
+  // parentheses, no table expression, and of the built-in functions only numeric ones with one unnamed argument,
+  // which is a data object. A literal joined with "&" is a single literal, "'a' & 'b'"
   private checkCalculation(source: ExpressionNode, input: SyntaxInput): string | undefined {
     if (Compare.isArithmetic(source, input)) {
       return "Arithmetic expression not allowed after WHEN";
     }
-    const first = source.getChildren()[0];
+    const children = source.getChildren();
+    const first = children[0];
     if (first instanceof TokenNode && first.getFirstToken().getStr() === "(") {
       return "Parentheses not allowed after WHEN";
+    } else if (children.some(c => c instanceof TokenNode && c.getFirstToken().getStr() === "&&")
+        || first?.get() instanceof Expressions.StringTemplate) {
+      return "String expression not allowed after WHEN";
+    } else if (/^BIT-NOT /i.test(source.concatTokens())
+        || children.some(c => c.get() instanceof Expressions.ArithOperator)) {
+      // the lexer splits BIT-NOT into three tokens, the arithmetic operators are reported above
+      return "Bit expression not allowed after WHEN";
+    } else if (children.some(c => (c.get() instanceof Expressions.FieldChain || c.get() instanceof Expressions.MethodCallChain)
+        && c instanceof ExpressionNode && c.findDirectExpression(Expressions.TableExpression) !== undefined)) {
+      return "Table expression not allowed after WHEN";
+    } else if (first instanceof TokenNode && /^(BOOLC|XSDBOOL)$/i.test(first.getFirstToken().getStr())) {
+      return `Built-in function "${first.getFirstToken().getStr()}" not allowed after WHEN, only a numeric function`;
     }
 
     const call = BuiltInCall.fromSource(source, input);
-    if (call === undefined || BuiltInCall.isNumeric(call) === false) {
+    if (call === undefined) {
       return undefined;
     }
     const name = BuiltInCall.callName(call);
+    if (BuiltInCall.isNumeric(call) === false) {
+      return `Built-in function "${name}" not allowed after WHEN, only a numeric function`;
+    }
     if (BuiltIn.hasUnnamedArgument(name) && BuiltInCall.hasDataObjectArgument(call)) {
       return undefined;
     }

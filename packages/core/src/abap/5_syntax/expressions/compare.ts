@@ -10,6 +10,7 @@ import {CGenericType, CharacterType, CLikeType, CSequenceType, DateType, HexType
 import {TypeUtils} from "../_type_utils";
 import {BuiltIn} from "../_builtin";
 import {BuiltInCall} from "../_builtin_call";
+import {checkOperandParentheses} from "../_parentheses";
 
 const COMPARISON_OPERATORS = ["=", "EQ", "<>", "NE", "><", "<", "LT", ">", "GT", "<=", "LE", "=<", ">=", "GE", "=>"];
 // built-in numeric functions of one argument, and those with further parameters
@@ -48,6 +49,8 @@ export class Compare {
     if (operandMessage !== undefined) {
       return;
     }
+
+    checkOperandParentheses(sources, input);
 
     const arithmeticMessage = this.checkArithmeticOperands(node, sources, sourceTypes, input);
     if (arithmeticMessage !== undefined) {

@@ -2,6 +2,7 @@ import * as Expressions from "../../2_statements/expressions";
 import {ExpressionNode} from "../../nodes";
 import {AbstractType} from "../../types/basic/_abstract_type";
 import {SyntaxInput, syntaxIssue} from "../_syntax_input";
+import {checkOperandParentheses} from "../_parentheses";
 import {ComponentChain} from "./component_chain";
 import {ComponentName} from "./component_name";
 import {Source} from "./source";
@@ -24,6 +25,8 @@ export class ComponentCompare {
     const fieldType = ComponentChain.runSyntax(leftType, chain, input);
 
     for (const s of node.findDirectExpressions(Expressions.Source)) {
+      // unlike the bounds of BETWEEN in a logical expression, each operand is on its own
+      checkOperandParentheses([s], input);
       const fieldChain = s.findDirectExpression(Expressions.FieldChain);
       const first = fieldChain?.getFirstChild();
       if (rightType && fieldChain && first) {

@@ -89,13 +89,29 @@ export class TypeUtils {
       || type instanceof VoidType;
   }
 
+  /** can the type be an operand of CO, CS, CP and the other comparison operators for character-like operands */
   public isCharLikeForCompare(type: AbstractType | undefined): boolean {
+    if (type instanceof TableType && type.isWithHeader()) {
+      return this.isCharLikeForCompare(type.getRowType());
+    } else if (type instanceof StructureType) {
+      return this.isFlatCharLike(type);
+    }
     return type === undefined
       || type instanceof StringType
+      || type instanceof SimpleType
       || type instanceof CLikeType
       || type instanceof CSequenceType
       || type instanceof DataType
       || this.isCharLikeField(type);
+  }
+
+  // a structure is character-like only when all its components are, down to the last substructure, a string
+  // component makes it deep
+  private isFlatCharLike(type: AbstractType): boolean {
+    if (type instanceof StructureType) {
+      return type.getComponents().every(c => this.isFlatCharLike(c.type));
+    }
+    return !(type instanceof StringType) && this.isCharLikeStrict(type);
   }
 
   public isCharLike(type: AbstractType | undefined): boolean {

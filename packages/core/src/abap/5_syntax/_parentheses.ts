@@ -16,7 +16,7 @@ export function parenthesized(source: ExpressionNode): ExpressionNode | undefine
   return undefined;
 }
 
-function withoutParentheses(source: ExpressionNode): ExpressionNode {
+export function withoutParentheses(source: ExpressionNode): ExpressionNode {
   const inner = parenthesized(source);
   return inner === undefined ? source : withoutParentheses(inner);
 }

@@ -10,9 +10,11 @@ import {CGenericType, CharacterType, CLikeType, CSequenceType, DateType, HexType
 import {TypeUtils} from "../_type_utils";
 import {BuiltIn} from "../_builtin";
 import {BuiltInCall} from "../_builtin_call";
-import {checkOperandParentheses} from "../_parentheses";
+import {checkOperandParentheses, withoutParentheses} from "../_parentheses";
 
 const COMPARISON_OPERATORS = ["=", "EQ", "<>", "NE", "><", "<", "LT", ">", "GT", "<=", "LE", "=<", ">=", "GE", "=>"];
+// the comparison operators for character-like operands
+const CHARACTER_OPERATORS = ["CO", "CN", "CA", "NA", "CS", "NS", "CP", "NP"];
 // built-in numeric functions of one argument, and those with further parameters
 const ONE_ARGUMENT_FUNCTIONS = ["abs", "sign", "ceil", "floor", "trunc", "frac", "acos", "asin", "atan", "cos",
   "sin", "tan", "cosh", "sinh", "tanh", "exp", "log", "log10", "sqrt"];
@@ -63,10 +65,8 @@ export class Compare {
 
     if (this.lacksComparisonType(node, sourceTypes, typeUtils)) {
       input.issues.push(syntaxIssue(input, node.getFirstToken(), "Incompatible types for comparison"));
-    } else if (compareOperator === "CS"
-        && sourceTypes.length === 2
-        && sourceTypes.some((type) => typeUtils.isCharLikeForCompare(type) === false)) {
-      const message = "CS operands must be character-like (data type C, N, D, T, or STRING)";
+    } else if (this.lacksCharacterOperands(node, sources, sourceTypes, typeUtils, input)) {
+      const message = `${compareOperator} operands must be character-like (data type C, N, D, T, or STRING)`;
       input.issues.push(syntaxIssue(input, node.getFirstToken(), message));
     } else if (node.findDirectExpression(Expressions.CompareOperator)
         && typeUtils.isCompareable(sourceTypes[0], sourceTypes[1], sources[0], sources[1]) === false
@@ -120,6 +120,35 @@ export class Compare {
   private static builtinCallName(source: ExpressionNode | undefined, input: SyntaxInput): string | undefined {
     const call = BuiltInCall.fromSource(source, input);
     return call === undefined ? undefined : BuiltInCall.callName(call);
+  }
+
+  // both operands of CO, CS, CP and the other operators for character-like data are character-like, with one
+  // exception on the right, see isNumericFunctionOfDataObject
+  private static lacksCharacterOperands(node: ExpressionNode, sources: readonly ExpressionNode[],
+                                        types: readonly (AbstractType | undefined)[], typeUtils: TypeUtils,
+                                        input: SyntaxInput): boolean {
+    const operator = node.findDirectExpression(Expressions.CompareOperator)?.concatTokens().toUpperCase();
+    if (operator === undefined || CHARACTER_OPERATORS.includes(operator) === false || sources.length !== 2) {
+      return false;
+    }
+    // "tab[]" is the table itself, while its type is that of "tab", which can be a character-like header line
+    const charLike = sources.map((s, i) => s.findDirectExpression(Expressions.FieldChain)
+      ?.findDirectExpression(Expressions.TableBody) === undefined && typeUtils.isCharLikeForCompare(types[i]));
+    return charLike[0] === false
+      || (charLike[1] === false && this.isNumericFunctionOfDataObject(sources[1], input) === false);
+  }
+
+  // a numeric built-in function of a data object, "strlen( s )" or "lines( tab )". As the right operand of CO, CS
+  // and the other operators for character-like operands it is expected to be accepted, odd as that is
+  private static isNumericFunctionOfDataObject(source: ExpressionNode, input: SyntaxInput): boolean {
+    const call = BuiltInCall.fromSource(withoutParentheses(source), input);
+    if (call === undefined
+        || BuiltInCall.isNumeric(call) === false
+        || BuiltIn.hasUnnamedArgument(BuiltInCall.callName(call)) === false) {
+      return false;
+    }
+    const argument = call.findDirectExpression(Expressions.MethodCallParam)?.findDirectExpression(Expressions.Source);
+    return argument !== undefined && BuiltInCall.isDataObject(withoutParentheses(argument));
   }
 
   // two operands without a comparison type, eg. a date and a time, also as operand and bound of BETWEEN. The

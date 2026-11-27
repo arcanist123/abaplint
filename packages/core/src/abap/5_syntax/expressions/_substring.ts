@@ -20,7 +20,8 @@ import {CheckSyntaxKey, SyntaxInput, syntaxIssue} from "../_syntax_input";
 // while a string, an xstring and the types "any" and "data" take it. See also allowEmptySubstring.
 // The offset is applied first, so the length is compared to what remains after the offset.
 // "chain" holds the nodes of the surrounding chain, including both the offset and the length.
-// A substring of a date, time or numeric text field has type n; its bounds are not checked.
+// A substring of a date, time or numeric text field has type n, and the same bounds apply to it, except
+// to a generic "n", which has no fixed length.
 // An offset or length on a numeric field (i, int8, p, f, decfloat) is a syntax error, unless the access
 // takes the whole field: the offset 0, the length "*" and the length of the field in bytes are accepted.
 // A time stamp of type utclong has no substrings either, only the offset 0 and the length "*", which
@@ -64,13 +65,13 @@ export function substringType(
   }
 
   if (context instanceof DateType || context instanceof TimeType || context instanceof NumericType) {
-    return numericSubstringType(context, offset, length);
-  }
-
-  if (!(context instanceof CharacterType) && !(context instanceof HexType)) {
+    if (context.isGeneric()) {
+      return length !== undefined && length > 0 ? new NumericType(length) : context;
+    }
+  } else if (!(context instanceof CharacterType) && !(context instanceof HexType)) {
     return context;
   }
-  const fieldLength = context.getLength();
+  const fieldLength = context instanceof DateType ? 8 : context instanceof TimeType ? 6 : context.getLength();
 
   if (offset !== undefined && offset > 0) {
     if (offset >= fieldLength) {
@@ -81,7 +82,7 @@ export function substringType(
       input.issues.push(syntaxIssue(input, node.getFirstToken(), message));
       return VoidType.get(CheckSyntaxKey);
     }
-    return context instanceof CharacterType ? new CharacterType(fieldLength - offset) : new HexType(fieldLength - offset);
+    return partType(context, fieldLength - offset);
   }
 
   if (length !== undefined && length > 0) {
@@ -93,7 +94,7 @@ export function substringType(
       input.issues.push(syntaxIssue(input, node.getFirstToken(), message));
       return VoidType.get(CheckSyntaxKey);
     }
-    return context instanceof CharacterType ? new CharacterType(length) : new HexType(length);
+    return partType(context, length);
   }
 
   return context;
@@ -191,28 +192,14 @@ function numericByteLength(context: AbstractType | undefined): number | undefine
   return undefined;
 }
 
-function numericSubstringType(
-  context: DateType | TimeType | NumericType,
-  offset: number | undefined,
-  length: number | undefined): AbstractType {
-
-  const hasOffset = offset !== undefined && offset > 0;
-  const hasLength = length !== undefined && length > 0;
-  if (hasOffset === false && hasLength === false) {
-    return context;
+// a substring of the given length, of a numeric text, date or time field it has type n
+function partType(context: AbstractType, length: number): AbstractType {
+  if (context instanceof CharacterType) {
+    return new CharacterType(length);
+  } else if (context instanceof HexType) {
+    return new HexType(length);
   }
-
-  let remaining = context instanceof DateType ? 8 : context instanceof TimeType ? 6 : context.getLength();
-  if (hasOffset) {
-    remaining = remaining - offset!;
-  }
-  if (hasLength) {
-    remaining = Math.min(remaining, length!);
-  }
-  if (remaining <= 0) {
-    return context;
-  }
-  return new NumericType(remaining);
+  return new NumericType(length);
 }
 
 // A field symbol typed "c" or "x" is generic, but its type is represented with length 1, so the

@@ -204,13 +204,6 @@ lv_result = lv_c5+5(lif=>len).`;
       "Offset 5 is outside the field of length 5"]);
   });
 
-  it("ok, numeric text, date", () => {
-    const issues = runProgram(program(`lv_n3+3 = '1'.
-lv_d+8 = '1'.
-lv_result = lv_d+8.`));
-    expect(issues[0]?.getMessage()).to.equal(undefined);
-  });
-
   it("ok, generic field symbols", () => {
     const issues = runProgram(program(`<lv_c>+3(4) = 'ABCD'.
 <lv_x>+3(2) = 'FFFF'.

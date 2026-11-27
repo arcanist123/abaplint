@@ -17,6 +17,8 @@ export type SyntaxInput = {
   deferred: (() => void)[],
   /** the statement is inside a LOOP structure */
   inLoop?: boolean,
+  /** of the TRY, CATCH and CLEANUP blocks around the statement, the innermost one is a CATCH block */
+  inCatch?: boolean,
   /** the statement is inside any loop structure, LOOP, DO, WHILE, SELECT etc. */
   inAnyLoop?: boolean,
 };

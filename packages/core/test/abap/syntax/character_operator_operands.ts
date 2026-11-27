@@ -83,6 +83,20 @@ describe("syntax.ts, operands of the comparison operators for character-like dat
     ["CO", "c CO strlen( lcl=>str( ) )"],
     ["CS", "c CS find( val = s sub = 'a' )"],
     ["CO", "c CO count( val = s sub = 'a' )"],
+    ["CO", "s && s CO strlen( s )"],
+    ["CS", "s && s CS strlen( s )"],
+    ["CP", "c && 'a' CP strlen( s )"],
+    ["CO", "'a' && 'b' CO strlen( s )"],
+    ["CO", "lcl=>str( ) && s CO strlen( s )"],
+    ["CO", "stab[ 1 ] && s CO strlen( s )"],
+    ["CO", "s && s CO ( strlen( s ) )"],
+    ["CA", "s && s CA lines( itab )"],
+    ["NA", "|a| NA numofchar( s )"],
+    ["CN", "|a{ i }| CN abs( i )"],
+    ["NP", "to_upper( s ) NP sqrt( f )"],
+    ["NS", "condense( val = s ) NS strlen( s )"],
+    ["CO", "boolc( i = 1 ) CO strlen( s )"],
+    ["CO", "xsdbool( i = 1 ) CO xstrlen( x )"],
   ];
   for (const [operator, condition] of errors) {
     it("error, " + condition, () => {
@@ -118,6 +132,19 @@ describe("syntax.ts, operands of the comparison operators for character-like dat
     "c NP sqrt( f )",
     "c CO abs( -1 )",
     "c CO ( strlen( s ) )",
+    "'a' & 'b' CO strlen( s )",
+    "'abc' CO strlen( s )",
+    "text-001 CO strlen( s )",
+    "( c ) CO strlen( s )",
+    "c+1(1) CO strlen( s )",
+    "lcl=>str( ) CO strlen( s )",
+    "stab[ 1 ] CO strlen( s )",
+    "CONV string( i ) CO strlen( s )",
+    "CONV string( s && s ) CO strlen( s )",
+    "s && s CO c",
+    "s && s CO s && s",
+    "s && s CO to_upper( s )",
+    "c CO s && s OR c CO strlen( s )",
   ];
   for (const condition of ok) {
     it("ok, " + condition, () => {

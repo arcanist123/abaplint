@@ -130,7 +130,8 @@ export class Compare {
   }
 
   // both operands of CO, CS, CP and the other operators for character-like data are character-like, with one
-  // exception on the right, see isNumericFunctionOfDataObject
+  // exception on the right, see isNumericFunctionOfDataObject, which does not apply after a character-like
+  // expression on the left
   private static lacksCharacterOperands(node: ExpressionNode, sources: readonly ExpressionNode[],
                                         types: readonly (AbstractType | undefined)[], typeUtils: TypeUtils,
                                         input: SyntaxInput): boolean {
@@ -140,7 +141,8 @@ export class Compare {
     }
     const charLike = sources.map((s, i) => this.isTableBody(s) === false && typeUtils.isCharLikeForCompare(types[i]));
     return charLike[0] === false
-      || (charLike[1] === false && this.isNumericFunctionOfDataObject(sources[1], input) === false);
+      || (charLike[1] === false
+        && (this.isCharacterExpression(sources[0], input) || this.isNumericFunctionOfDataObject(sources[1], input) === false));
   }
 
   // both operands of BYTE-CO, O and the other operators for byte-like data are byte-like, with the same exception on
@@ -170,6 +172,21 @@ export class Compare {
     }
     return operand.findDirectExpressions(Expressions.ArithOperator)
       .some(o => o.concatTokens().toUpperCase().startsWith("BIT-"));
+  }
+
+  // "a && b", a string template, or a built-in function with a character-like result, "to_upper( a )" or
+  // "boolc( a = b )". Literals joined with "&" are a single literal
+  private static isCharacterExpression(source: ExpressionNode, input: SyntaxInput): boolean {
+    const operand = withoutParentheses(source);
+    const first = operand.getFirstChild();
+    if (operand.findDirectTokenByText("&&") !== undefined || first?.get() instanceof Expressions.StringTemplate) {
+      return true;
+    } else if (first instanceof TokenNode && ["BOOLC", "XSDBOOL"].includes(first.getFirstToken().getStr().toUpperCase())) {
+      return true;
+    }
+    const name = this.builtinCallName(operand, input)?.toUpperCase();
+    const returning = BuiltIn.searchBuiltin(name)?.getParameters().getReturning()?.getType();
+    return returning instanceof StringType || returning instanceof CharacterType;
   }
 
   // a numeric built-in function of a data object, "strlen( s )" or "lines( tab )". As the right operand of CO, CS

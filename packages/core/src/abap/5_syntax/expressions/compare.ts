@@ -15,6 +15,8 @@ import {checkOperandParentheses, withoutParentheses} from "../_parentheses";
 const COMPARISON_OPERATORS = ["=", "EQ", "<>", "NE", "><", "<", "LT", ">", "GT", "<=", "LE", "=<", ">=", "GE", "=>"];
 // the comparison operators for character-like operands
 const CHARACTER_OPERATORS = ["CO", "CN", "CA", "NA", "CS", "NS", "CP", "NP"];
+// the comparison operators for byte-like operands, and those for bit patterns
+const BYTE_OPERATORS = ["BYTE-CO", "BYTE-CN", "BYTE-CA", "BYTE-NA", "BYTE-CS", "BYTE-NS", "O", "Z", "M"];
 // built-in numeric functions of one argument, and those with further parameters
 const ONE_ARGUMENT_FUNCTIONS = ["abs", "sign", "ceil", "floor", "trunc", "frac", "acos", "asin", "atan", "cos",
   "sin", "tan", "cosh", "sinh", "tanh", "exp", "log", "log10", "sqrt"];
@@ -68,6 +70,11 @@ export class Compare {
     } else if (this.lacksCharacterOperands(node, sources, sourceTypes, typeUtils, input)) {
       const message = `${compareOperator} operands must be character-like (data type C, N, D, T, or STRING)`;
       input.issues.push(syntaxIssue(input, node.getFirstToken(), message));
+    } else if (compareOperator !== undefined && BYTE_OPERATORS.includes(compareOperator)) {
+      if (this.lacksByteOperands(sources, sourceTypes, typeUtils, input)) {
+        const message = `${compareOperator} operands must be byte-like (data type X or XSTRING)`;
+        input.issues.push(syntaxIssue(input, node.getFirstToken(), message));
+      }
     } else if (node.findDirectExpression(Expressions.CompareOperator)
         && typeUtils.isCompareable(sourceTypes[0], sourceTypes[1], sources[0], sources[1]) === false
         && sourceTypes.length === 2) {
@@ -131,11 +138,38 @@ export class Compare {
     if (operator === undefined || CHARACTER_OPERATORS.includes(operator) === false || sources.length !== 2) {
       return false;
     }
-    // "tab[]" is the table itself, while its type is that of "tab", which can be a character-like header line
-    const charLike = sources.map((s, i) => s.findDirectExpression(Expressions.FieldChain)
-      ?.findDirectExpression(Expressions.TableBody) === undefined && typeUtils.isCharLikeForCompare(types[i]));
+    const charLike = sources.map((s, i) => this.isTableBody(s) === false && typeUtils.isCharLikeForCompare(types[i]));
     return charLike[0] === false
       || (charLike[1] === false && this.isNumericFunctionOfDataObject(sources[1], input) === false);
+  }
+
+  // both operands of BYTE-CO, O and the other operators for byte-like data are byte-like, with the same exception on
+  // the right as for character-like data, which does not apply after a bit expression on the left
+  private static lacksByteOperands(sources: readonly ExpressionNode[], types: readonly (AbstractType | undefined)[],
+                                   typeUtils: TypeUtils, input: SyntaxInput): boolean {
+    if (sources.length !== 2) {
+      return false;
+    }
+    const byteLike = sources.map((s, i) => this.isTableBody(s) === false && typeUtils.isByteLikeForCompare(types[i]));
+    return byteLike[0] === false
+      || (byteLike[1] === false
+        && (this.isBitExpression(sources[0]) || this.isNumericFunctionOfDataObject(sources[1], input) === false));
+  }
+
+  // "tab[]" is the table itself, while its type is that of "tab", which can be a header line
+  private static isTableBody(source: ExpressionNode): boolean {
+    return source.findDirectExpression(Expressions.FieldChain)?.findDirectExpression(Expressions.TableBody) !== undefined;
+  }
+
+  // "a BIT-AND b", "BIT-NOT a", "bit-set( n )" or "boolx( bool = a = b bit = n )"
+  private static isBitExpression(source: ExpressionNode): boolean {
+    const operand = withoutParentheses(source);
+    const first = operand.getFirstChild();
+    if (first instanceof TokenNode && ["BIT", "BOOLX"].includes(first.getFirstToken().getStr().toUpperCase())) {
+      return true;
+    }
+    return operand.findDirectExpressions(Expressions.ArithOperator)
+      .some(o => o.concatTokens().toUpperCase().startsWith("BIT-"));
   }
 
   // a numeric built-in function of a data object, "strlen( s )" or "lines( tab )". As the right operand of CO, CS

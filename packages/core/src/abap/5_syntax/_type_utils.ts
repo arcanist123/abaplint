@@ -114,6 +114,23 @@ export class TypeUtils {
     return !(type instanceof StringType) && this.isCharLikeStrict(type);
   }
 
+  /** can the type be an operand of BYTE-CO, O and the other comparison operators for byte-like operands, a structure
+   * cannot, also not with byte-like components only */
+  public isByteLikeForCompare(type: AbstractType | undefined): boolean {
+    if (type instanceof TableType && type.isWithHeader()) {
+      return this.isByteLikeForCompare(type.getRowType());
+    }
+    return type === undefined
+      || type instanceof HexType
+      || type instanceof XStringType
+      || type instanceof XGenericType
+      || type instanceof XSequenceType
+      || type instanceof AnyType
+      || type instanceof DataType
+      || type instanceof VoidType
+      || type instanceof UnknownType;
+  }
+
   public isCharLike(type: AbstractType | undefined): boolean {
     if (type === undefined) {
       return false;

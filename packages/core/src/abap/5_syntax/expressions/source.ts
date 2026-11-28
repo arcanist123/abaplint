@@ -324,7 +324,8 @@ export class Source {
           const found = FieldChain.runSyntax(first, input, type, allowGenericDeference);
           context = arithmetic === true ? this.infer(context, found, true) : found;
         } else if (get instanceof Expressions.StringTemplate) {
-          context = StringTemplate.runSyntax(first, input);
+          const found = StringTemplate.runSyntax(first, input);
+          context = arithmetic === true ? this.infer(context, found, true) : found;
         } else if (get instanceof Expressions.Source) {
           const found = Source.runSyntax(first, input);
           if (arithmetic === true && this.reportNonNumericOperand(found, first, input)) {
@@ -393,8 +394,12 @@ export class Source {
       return StringType.get();
     }
 
-    if (signed === true && arithmetic === false && this.reportNonNumericOperand(context, operand, input)) {
-      return VoidType.get(CheckSyntaxKey);
+    if (signed === true && arithmetic === false) {
+      if (this.reportNonNumericOperand(context, operand, input)) {
+        return VoidType.get(CheckSyntaxKey);
+      } else if (context !== undefined && this.isCharacterLike(context)) {
+        return new PackedType(8, 0);
+      }
     }
 
     return context;
@@ -470,11 +475,11 @@ export class Source {
   }
 
   /** The calculation type of an arithmetic expression is the most general of the
-   * operand types. An operand of type c, n, d, t or string is converted into it and
-   * never becomes the result: "lv_f * '0.25'" is a float, not a character field of
-   * length four. Date and time operands count as numbers of days and seconds, type i:
-   * "lv_end - lv_start" is a number of days, not a date. Returns undefined when neither
-   * operand is numeric, leaving the decision to the caller. */
+   * operand types. An operand of type c, n or string counts as p and never becomes the
+   * result: "lv_i * '2'" is p, "lv_f * '0.25'" is a float. Date and time operands count
+   * as numbers of days and seconds, type i: "lv_end - lv_start" is a number of days,
+   * not a date. Returns undefined when neither operand is numeric or character-like,
+   * leaving the decision to the caller. */
   private static calculationType(left: AbstractType | undefined, right: AbstractType | undefined) {
     if (left === undefined || right === undefined) {
       return undefined;
@@ -485,8 +490,6 @@ export class Source {
       return right;
     }
 
-    const dateOrTime = left instanceof DateType || left instanceof TimeType
-      || right instanceof DateType || right instanceof TimeType;
     if (left instanceof DateType || left instanceof TimeType) {
       left = IntegerType.get();
     }
@@ -496,15 +499,18 @@ export class Source {
 
     const leftRank = this.numericRank(left);
     const rightRank = this.numericRank(right);
-    if (leftRank === undefined && rightRank === undefined) {
-      return undefined;
+    if ((this.isCharacterLike(left) && this.isElementaryOperand(right))
+        || (this.isCharacterLike(right) && this.isElementaryOperand(left))) {
+      if (leftRank !== undefined && leftRank >= 3 && leftRank >= (rightRank || 0)) {
+        return left;
+      } else if (rightRank !== undefined && rightRank >= 3) {
+        return right;
+      }
+      return new PackedType(8, 0);
     }
 
-    // a character-like operand next to a date or time counts as p: "lv_date + '5'" is p
-    if (leftRank === undefined && this.isCharacterLike(left) && dateOrTime) {
-      return rightRank! >= 3 ? right : new PackedType(8, 0);
-    } else if (rightRank === undefined && this.isCharacterLike(right) && dateOrTime) {
-      return leftRank! >= 3 ? left : new PackedType(8, 0);
+    if (leftRank === undefined && rightRank === undefined) {
+      return undefined;
     }
 
     if (rightRank === undefined) {
@@ -517,6 +523,11 @@ export class Source {
 
   private static isCharacterLike(type: AbstractType): boolean {
     return type instanceof CharacterType || type instanceof NumericType || type instanceof StringType;
+  }
+
+  private static isElementaryOperand(type: AbstractType): boolean {
+    return this.numericRank(type) !== undefined || this.isCharacterLike(type)
+      || type instanceof HexType || type instanceof XStringType;
   }
 
   private static numericRank(type: AbstractType): number | undefined {

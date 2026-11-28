@@ -2910,12 +2910,12 @@ DATA(res) = val * cha.`;
     expect(identifier!.getType()).to.be.instanceof(Basic.FloatType);
   });
 
-  it("arithmetic, integer stays integer next to a character literal", () => {
+  it("arithmetic, an integer and a character literal give packed", () => {
     const abap = `DATA val TYPE i.
 DATA(res) = val * '0.25'.`;
     const identifier = resolveVariable(abap, "res");
     expect(identifier).to.not.equal(undefined);
-    expect(identifier!.getType()).to.be.instanceof(Basic.IntegerType);
+    expect(identifier!.getType()).to.be.instanceof(Basic.PackedType);
   });
 
   it("arithmetic, packed stays packed next to a character literal", () => {

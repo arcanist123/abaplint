@@ -6,7 +6,7 @@ import {AbstractType} from "../types/basic/_abstract_type";
 import {CGenericType} from "../types/basic/cgeneric_type";
 import {CurrentScope} from "./_current_scope";
 import * as Expressions from "../2_statements/expressions";
-import {ExpressionNode, TokenNodeRegex} from "../nodes";
+import {ExpressionNode, TokenNode, TokenNodeRegex} from "../nodes";
 import {NGenericType} from "../types/basic/ngeneric_type";
 import {BuiltIn} from "./_builtin";
 import {characterStartLength} from "./_character_start";
@@ -325,6 +325,11 @@ export class TypeUtils {
       || node.findFirstExpression(Expressions.StringTemplate) !== undefined
       || node.findFirstExpression(Expressions.ArithOperator) !== undefined;
     return calculated;
+  }
+
+  private isSigned(node: ExpressionNode | undefined): boolean {
+    const first = node?.get() instanceof Expressions.Source ? node.getFirstChild() : undefined;
+    return first instanceof TokenNode && ["+", "-"].includes(first.concatTokens());
   }
 
   /** the source is only a call of a functional method, not a built-in function,
@@ -658,8 +663,9 @@ export class TypeUtils {
         return false;
       }
     } else if (source instanceof PackedType && target instanceof PackedType) {
-      return source.getLength() === target.getLength()
-        && source.getDecimals() === target.getDecimals();
+      // with a sign, "- foo", the value is calculated, and converted into any packed type
+      return this.isSigned(node)
+        || (source.getLength() === target.getLength() && source.getDecimals() === target.getDecimals());
     } else if (source instanceof FloatType) {
       if (target instanceof IntegerType) {
         return false;
